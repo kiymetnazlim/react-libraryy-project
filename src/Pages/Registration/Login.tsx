@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from "../Components/Button.tsx"
+import Button from "../../Components/Button"
 
 
 const Login: React.FC = () => {

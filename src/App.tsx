@@ -1,32 +1,25 @@
-import { useState } from "react";
-import Navbar from "./Components/Navbar";
-import BookManagement from "./Pages/BookForm";
-import LendBook from "./Pages/LendBooks";
 import './App.css'
-import Login from "./Pages/Login";
+import Navbar from './Components/Navbar'; import Login from "./Pages/Registration/Login";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import BookForm from "./Pages/Books/Book";
+import User from "./Pages/Users/AddUser";
+import LendBooks from "./Pages/Lendings/LendBooks";
+
 
 function App() {
-  const [activePage, setActivePage] = useState<string>(""); // Varsayılan olarak kitap listesi
-
-  const handlePageSelect = (page: string) => {
-    setActivePage(page);
-  };
-
   return (
-    <>
-
-      <Navbar onSelectPage={handlePageSelect} />
-
-      {/* Sayfa durumuna göre bileşen göster */}
-      {activePage === "book-management" && <BookManagement />}
-      {activePage === "lend-book" && <LendBook />}
-      {activePage === "" && <Login />}
-
-
-    </>
-
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/kitap-işlemleri" element={<BookForm />} />
+        <Route path="/kullanici-işlemleri" element={<User />} />
+        <Route path="/ödünç-işlemleri" element={<LendBooks />} />
+        <Route path="/" element={<Login />} />
+      </Routes>
+    </Router>
   );
+};
 
-}
+
 
 export default App;

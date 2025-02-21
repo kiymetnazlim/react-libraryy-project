@@ -1,14 +1,17 @@
 import React from 'react';
-import { MyButton } from "../DTO/ButtonDTO.ts"
+import { ButtonProps } from "../types/ButtonProps.ts"
+import { Button } from "@mui/material";
 
 
 
-const Button: React.FC<MyButton> = ({ type, onClick, children }) => {
+
+const Button1: React.FC<ButtonProps> = ({ type, onClick, children }) => {
     return (
-        <button type={type} onClick={onClick}>
+        <Button type={type} onClick={onClick}  variant="contained" >
             {children}
-        </button>
+        </Button>
     );
 };
 
-export default Button;
+export default Button1;
+

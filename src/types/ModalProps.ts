@@ -1,5 +1,5 @@
 
-export interface CustomModalProps{
+export interface CustomModalProps {
     open: boolean;
     onClose: () => void;
     children: React.ReactNode;

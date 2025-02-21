@@ -1,8 +1,9 @@
 import React from 'react';
-import { TableProps } from "../DTO/TableDTO.ts";
+import { TableProps } from "../types/TableProps.ts";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box } from '@mui/material';
 import { Paper } from '@mui/material';
-import "../static/BookForm.css"; // Bu stilleri ihtiyaca göre düzenleyebilirsiniz.
+import { Delete } from "@mui/icons-material";
+
 
 const Table1: React.FC<TableProps> = ({ Column, Row }) => {
     return (
@@ -31,15 +32,16 @@ const Table1: React.FC<TableProps> = ({ Column, Row }) => {
 
                                     <Button type='submit'
                                         variant="contained"
-                                        color="primary"
+                                        color="error"
                                         size="small"
                                         onClick={() => { }}
+                                        startIcon={<Delete />}
                                     >
                                         Sil
                                     </Button>
                                     <Button type='submit'
                                         variant="contained"
-                                        color="primary"
+                                        color="warning"
                                         size="small"
                                         onClick={() => { }}
                                     >

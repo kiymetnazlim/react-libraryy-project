@@ -1,5 +1,5 @@
 import { Box, Modal, Typography } from "@mui/material";
-import { CustomModalProps } from "../DTO/ModalDTO";
+import { CustomModalProps } from "../types/ModalProps";
 
 
 
@@ -27,8 +27,9 @@ const CustomModal: React.FC<CustomModalProps> = ({
             >
                 {title && (
                     <Typography id="modal-title" variant="h6" component="h2" mb={2}>
-                        {title}
+                        {title}  {/* modal başlığı yalnızca title olduğunda gösterilecek. */}
                     </Typography>
+
                 )}
                 {children}
             </Box>

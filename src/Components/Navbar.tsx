@@ -1,28 +1,26 @@
 import React from "react";
+import { AppBar, Toolbar, Button, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
 import "../static/navbar.css";  // CSS dosyasını içe aktar
 
-interface NavbarProps {
-    onSelectPage: (page: string) => void;
-    //bu interface bir fonksiyonu prop'u alıyor.
-    //fonksiyon page değerli alıyor string olarak.
-    //navbardaki butonlara tıklandığında hangi sayfanın seçileceğini tutyor.
-}
-//NavbarProps alınan prop türünü gösteriyor.
-const Navbar: React.FC<NavbarProps> = ({ onSelectPage }) => { //onSelectPage props olarak verilmiş.
+const Navbar: React.FC = () => {
     return (
-        <nav>
-            <ul>
-                <li>
-                    <button onClick={() => onSelectPage("books")}>Kullanıcı Ayarları</button>
-                </li>
-                <li>
-                    <button onClick={() => onSelectPage("book-management")}>Kitap Yönetimi</button>
-                </li>
-                <li>
-                    <button onClick={() => onSelectPage("lend-book")}>Kitap Ödünç Ver</button>
-                </li>
-            </ul>
-        </nav>
+        <AppBar position="sticky" color="primary">
+            <Toolbar>
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    Kütüphane Yönetim Sistemi
+                </Typography>
+                <Button color="inherit" component={Link} to="/kitap-işlemleri">
+                    Kitap İşlemleri
+                </Button>
+                <Button color="inherit" component={Link} to="/kullanici-işlemleri">
+                    Kullanıcı İşlemleri
+                </Button>
+                <Button color="inherit" component={Link} to="/ödünç-işlemleri">
+                    Ödünç İşlemleri
+                </Button>
+            </Toolbar>
+        </AppBar>
     );
 };
 
