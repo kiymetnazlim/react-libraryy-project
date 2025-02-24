@@ -1,9 +1,7 @@
- 
- export interface UserProps {
-    name:string;
-    surname:string;
-    email:string;
-    phone?:string;
-
-
+export interface UserProps {
+   id: number;
+   name: string;
+   email: string;
  }
+ 
+ 

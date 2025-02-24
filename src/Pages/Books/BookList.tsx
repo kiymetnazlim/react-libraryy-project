@@ -1,30 +1,20 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { BookProps } from "../../types/BookProps.ts";
+import Table1 from "../../Components/Table1.tsx"
+
+
+const columns = [
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "title", headerName: "Kitap Adı", width: 180 },
+    { field: "author", headerName: "Yazar", width: 180 },
+];
 
 const BookList: React.FC<{ books: BookProps[] }> = ({ books }) => {
     return (
-        <div style={{ height: 400, width: "100%" }}>
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Kitap Adı</TableCell>
-                            <TableCell>Yazar</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {books.map((book) => (
-                            <TableRow key={book.id}>
-                                <TableCell>{book.id}</TableCell>
-                                <TableCell>{book.title}</TableCell>
-                                <TableCell>{book.author}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+
+        <div >
+            <Table1 Column={columns} Row={books}></Table1>
+
         </div>
     );
 };

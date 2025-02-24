@@ -1,5 +1,5 @@
 
-export interface BookProps {//Burda kitabın alacağı props değerlerini tanımlıyoruz.
+export interface BookProps {
     id:number;
     title: string;
     author: string;

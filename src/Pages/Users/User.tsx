@@ -1,18 +1,36 @@
-import React from "react";
-import AddUser from "./AddUser"; // AddUser formunu import ediyoruz.
-import UserList from "./UserList";
-import { users } from "../../users";
+import React, { useState, useEffect } from "react";
+import { UserProps } from "../../types/UserProps.ts";
+import AddUser from "./AddUser.tsx"; // Kullanıcı ekleme formu
+import UserList from "./UserList.tsx" // Kullanıcı listesini gösteren bileşen
 
-const User: React.FC = () => {
-  return (
-    <div>
-      <h1>Kullanıcı Yönetimi</h1>
-      {/* AddUser formunu burada çağırıyoruz */}
-      <AddUser />
+const UserForm: React.FC = () => {
+    const [users, setUsers] = useState<UserProps[]>([]);
 
-      <UserList users={users} />
-    </div >
-  );
+    // Sayfa yüklendiğinde localStorage'dan kullanıcıları al
+    useEffect(() => {
+        const storedUsers = localStorage.getItem("users");
+        if (storedUsers) {
+            const parsedUsers = JSON.parse(storedUsers).map((u: UserProps) => ({ ...u }));
+            setUsers(parsedUsers);
+        }
+    }, []);
+
+    // Yeni kullanıcı ekleme fonksiyonu
+    const handleAddUser = (user: { name: string; email: string }) => {
+        const newUser = { id: users.length + 1, ...user };
+        const updatedUsers = [...users, newUser];
+
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
+    };
+
+    return (
+        <div className="user-form-container">
+            <AddUser onAddUser={handleAddUser} />
+            <h2>Kullanıcı Listesi</h2>
+            <UserList users={users} />
+        </div>
+    );
 };
 
-export default User;
+export default UserForm;
