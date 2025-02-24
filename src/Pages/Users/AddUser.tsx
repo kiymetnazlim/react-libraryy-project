@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomModal from "../../Components/Modal.tsx";
-import { UserProps } from "../../types/UserProps";
+import { UserProps } from "../../types/UserProps.ts";
 
 interface AddUserProps {
-    onAddUser: (user: UserProps) => void;
+    onAddUser: (user: { name: string; email: string; }) => void;
 }
 
 const AddUser: React.FC<AddUserProps> = ({ onAddUser }) => {
-    const [user, setUser] = useState<UserProps>({ id: 0, name: "", email: "" });
+    const [user, setUser] = useState<{ name: string; email: string }>({ name: "", email: "" });
     const [open, setOpen] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,12 +20,16 @@ const AddUser: React.FC<AddUserProps> = ({ onAddUser }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Yeni kullanıcı ekleniyor:", user);
+        console.log("🟢 handleSubmit çalıştı! Kullanıcı ekleme işlemi başladı...");
+        console.log("Eklenmek istenen kullanıcı:", user);
 
-        if (!user.name || !user.email) return; // Boş veri eklemeyi engelle
+        if (!user.name || !user.email) return;
+        console.error("❌ Kullanıcı adı veya e-posta eksik!");
 
-        onAddUser({ ...user, id: Date.now() }); // id eklenmiş hali
-        setUser({ id: 0, name: "", email: "" }); // Formu temizle
+        onAddUser(user);
+        console.log("✅ onAddUser fonksiyonu çağrıldı!", user);
+
+        setUser({ name: "", email: "" });
         setOpen(false);
     };
 

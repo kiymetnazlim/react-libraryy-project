@@ -11,7 +11,16 @@ const CustomModal: React.FC<CustomModalProps> = ({
     width = 800
 }) => {
     return (
-        <Modal open={open} onClose={onClose} aria-labelledby="modal-title">
+        <Modal
+            open={open}
+            onClose={(event, reason) => {
+                if (reason !== "backdropClick") {
+                    onClose();
+                }
+            }}
+            aria-labelledby="modal-title"
+        >
+
             <Box
                 sx={{
                     position: "absolute",

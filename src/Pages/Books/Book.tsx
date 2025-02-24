@@ -18,18 +18,25 @@ const BookForm: React.FC = () => {
     }, []);
 
     const handleAddBook = (book: { title: string; author: string }) => {
-        const newBook = { id: books.length + 1, ...book };
+        const lastId = books.length > 0 ? books[books.length - 1].id : 0;
+        const newBook = { id: lastId + 1, ...book };
         const updatedBooks = [...books, newBook];
 
         localStorage.setItem("books", JSON.stringify(updatedBooks));
         setBooks(updatedBooks);
     };
 
+    const handleDeleteBook = (id: number) => {
+        const updatedBooks = books.filter(user => user.id !== id);
+        localStorage.setItem("books", JSON.stringify(updatedBooks))
+        setBooks(updatedBooks);
+    }
+
     return (
         <div className="book-form-container">
             <AddBook onAddBook={handleAddBook} />
             <h2>Kitap Listesi</h2>
-            <BookList books={books} />
+            <BookList books={books} onDeleteBook={handleDeleteBook} />
         </div>
     );
 };

@@ -8,6 +8,7 @@ export interface Column {
 }
 
 export interface Row {
+    id: number;
     [key: string]: any;
 
 }
@@ -21,6 +22,8 @@ export interface Row {
 export interface TableProps {
     Column: Column[];
     Row: Row[];
+    onDelete?:(id:number)=>void;
+    
     // Pagination: Pagination[];
 
 

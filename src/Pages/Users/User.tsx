@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UserProps } from "../../types/UserProps.ts";
 import AddUser from "./AddUser.tsx"; // Kullanıcı ekleme formu
-import UserList from "./UserList.tsx" // Kullanıcı listesini gösteren bileşen
+import UserList from "./UserList.tsx"; // Kullanıcı listesini gösteren bileşen
 
 const UserForm: React.FC = () => {
     const [users, setUsers] = useState<UserProps[]>([]);
@@ -17,9 +17,17 @@ const UserForm: React.FC = () => {
 
     // Yeni kullanıcı ekleme fonksiyonu
     const handleAddUser = (user: { name: string; email: string }) => {
-        const newUser = { id: users.length + 1, ...user };
+        const lastId = users.length > 0 ? users[users.length - 1].id : 0;
+        const newUser = { id: lastId + 1, ...user };
         const updatedUsers = [...users, newUser];
 
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
+    };
+
+    // Kullanıcıyı ID ile silme fonksiyonu
+    const handleDeleteUser = (id: number) => {
+        const updatedUsers = users.filter(user => user.id !== id);
         localStorage.setItem("users", JSON.stringify(updatedUsers));
         setUsers(updatedUsers);
     };
@@ -28,7 +36,7 @@ const UserForm: React.FC = () => {
         <div className="user-form-container">
             <AddUser onAddUser={handleAddUser} />
             <h2>Kullanıcı Listesi</h2>
-            <UserList users={users} />
+            <UserList users={users} onDeleteUser={handleDeleteUser} /> {/* Silme fonksiyonunu gönder */}
         </div>
     );
 };

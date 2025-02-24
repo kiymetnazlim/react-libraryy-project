@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomModal from "../../Components/Modal.tsx";
 
-
-
-
-
 const AddBook: React.FC<{ onAddBook: (book: { title: string; author: string }) => void }> = ({ onAddBook }) => {
     const [book, setBook] = useState<{ title: string; author: string }>({ title: "", author: "" });
     const [open, setOpen] = useState(false);
@@ -13,13 +9,12 @@ const AddBook: React.FC<{ onAddBook: (book: { title: string; author: string }) =
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setBook({ ...book, [e.target.name]: e.target.value });
     };
-    console.log("onAddBook nedir?", onAddBook);
-    console.log("onAddBook türü:", typeof onAddBook);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Yeni kitap ekleniyor:", book);
+
         onAddBook(book);
+
         setBook({ title: "", author: "" });
         setOpen(false);
     };

@@ -2,7 +2,7 @@ import './App.css'
 import Navbar from './Components/Navbar'; import Login from "./Pages/Registration/Login";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import BookForm from "./Pages/Books/Book";
-import User from "./Pages/Users/AddUser";
+import User from "./Pages/Users/User";
 import LendBooks from "./Pages/Lendings/LendBooks";
 
 
