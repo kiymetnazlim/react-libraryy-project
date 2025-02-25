@@ -9,21 +9,24 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     width = "200px",
     height = "40px",
     position = "left",
-    onSelect,  
-    placeholder = "Select an option", 
+    onSelect,
+    multiple = false,
+    disabled = false,
+    placeholder = "Select an option",
+    selectedValues = [],
 }) => {
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [displayValue, setDisplayValue] = useState<string>('');
 
     useEffect(() => {
-        
-        if (options.length === 0) {
-            setSelectedOption(null);
+        if (multiple && selectedValues.length > 0) {
+            setDisplayValue(selectedValues.join(', '));
+        } else {
+            setDisplayValue('');
         }
-    }, [options]);
+    }, [selectedValues, multiple]);
 
     const handleSelect = (option: Option) => {
-        setSelectedOption(option.value);
-        onSelect(option.value); //
+        onSelect(option.value);
     };
 
     return (
@@ -31,9 +34,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             <Dropdown
                 options={options}
                 onChange={handleSelect}
-                value={selectedOption || ''} 
-                placeholder={placeholder} 
+                value={displayValue || ''}
+                placeholder={placeholder}
                 className="dropdown-with-shadow"
+                disabled={disabled}
             />
         </div>
     );

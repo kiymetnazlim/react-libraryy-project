@@ -33,11 +33,8 @@ const LendBooks: React.FC = () => {
     const [dropdownKey, setDropdownKey] = useState<number>(0);
 
     const handleUserSelect = (user: string): void => {
-        if (selectedUser) {
-            alert("Kullanıcıyı değiştiremezsiniz, birden fazla kitap seçmek için mevcut kullanıcı ile devam edin.");
-            return;
-        }
         setSelectedUser(user);
+        setSelectedBooks([]);
     };
 
     const handleBookSelect = (book: string): void => {
@@ -86,22 +83,18 @@ const LendBooks: React.FC = () => {
                     options={userNames}
                     width="200px"
                     onSelect={handleUserSelect}
-                    disabled={!!selectedUser}
+                    disabled={false}
                     placeholder='Kullanıcı seçiniz'
                 />
                 <CustomDropdown
                     key={`book-dropdown-${dropdownKey}`}
                     options={bookNames}
-                    width="200px"
+                    width="300px"
                     onSelect={handleBookSelect}
                     multiple
                     placeholder='Kitap seçiniz'
+                    selectedValues={selectedBooks}
                 />
-                <Box>
-                    <Typography variant="h6">
-                        Seçili Kitaplar: {selectedBooks.join(", ")}
-                    </Typography>
-                </Box>
                 <Box>
                     <Button variant="contained" onClick={handleSave}>
                         Kaydet

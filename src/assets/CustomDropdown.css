@@ -1,5 +1,29 @@
-
 .dropdown-with-shadow {
-    
     box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.Dropdown-control {
+    padding: 8px 52px 8px 10px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.Dropdown-placeholder {
+    color: #757575;
+}
+
+.Dropdown-option {
+    padding: 8px 10px;
+}
+
+.Dropdown-option:hover {
+    background-color: #f5f5f5;
+}
+
+.Dropdown-arrow {
+    border-color: #757575 transparent transparent;
 }
