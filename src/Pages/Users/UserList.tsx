@@ -16,7 +16,7 @@ const columns = [
 const UserList: React.FC<UserListProps> = ({ users, onDeleteUser }) => {
     return (
         <div>
-            <Table1 Column={columns} Row={users} onDelete={onDeleteUser} showDeleteButton={true} showUpdateButton={false}/>
+            <Table1 Column={columns} Row={users} onDelete={onDeleteUser} showDeleteButton={true} showUpdateButton={true} />
         </div>
     );
 };

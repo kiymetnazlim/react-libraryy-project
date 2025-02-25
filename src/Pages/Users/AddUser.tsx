@@ -20,14 +20,14 @@ const AddUser: React.FC<AddUserProps> = ({ onAddUser }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("🟢 handleSubmit çalıştı! Kullanıcı ekleme işlemi başladı...");
+        console.log(" handleSubmit çalıştı! Kullanıcı ekleme işlemi başladı...");
         console.log("Eklenmek istenen kullanıcı:", user);
 
         if (!user.name || !user.email) return;
-        console.error("❌ Kullanıcı adı veya e-posta eksik!");
+        console.error(" Kullanıcı adı veya e-posta eksik!");
 
         onAddUser(user);
-        console.log("✅ onAddUser fonksiyonu çağrıldı!", user);
+        console.log(" onAddUser fonksiyonu çağrıldı!", user);
 
         setUser({ name: "", email: "" });
         setOpen(false);

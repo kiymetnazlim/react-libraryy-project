@@ -1,0 +1,7 @@
+
+
+export interface RegistrationProps {
+    username: string;
+    email: string;
+    password: string;
+}

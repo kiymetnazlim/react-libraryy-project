@@ -6,7 +6,6 @@ import UserList from "./UserList.tsx"; // Kullanıcı listesini gösteren bileş
 const UserForm: React.FC = () => {
     const [users, setUsers] = useState<UserProps[]>([]);
 
-    // Sayfa yüklendiğinde localStorage'dan kullanıcıları al
     useEffect(() => {
         const storedUsers = localStorage.getItem("users");
         if (storedUsers) {
@@ -15,7 +14,6 @@ const UserForm: React.FC = () => {
         }
     }, []);
 
-    // Yeni kullanıcı ekleme fonksiyonu
     const handleAddUser = (user: { name: string; email: string }) => {
         const lastId = users.length > 0 ? users[users.length - 1].id : 0;
         const newUser = { id: lastId + 1, ...user };
@@ -25,7 +23,6 @@ const UserForm: React.FC = () => {
         setUsers(updatedUsers);
     };
 
-    // Kullanıcıyı ID ile silme fonksiyonu
     const handleDeleteUser = (id: number) => {
         const updatedUsers = users.filter(user => user.id !== id);
         localStorage.setItem("users", JSON.stringify(updatedUsers));

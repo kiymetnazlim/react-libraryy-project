@@ -3,13 +3,7 @@ import { CustomModalProps } from "../types/ModalProps";
 
 
 
-const CustomModal: React.FC<CustomModalProps> = ({
-    open,
-    onClose,
-    children,
-    title,
-    width = 800
-}) => {
+const CustomModal: React.FC<CustomModalProps> = ({ open, onClose, children, title, width = 800 }) => {
     return (
         <Modal
             open={open}
