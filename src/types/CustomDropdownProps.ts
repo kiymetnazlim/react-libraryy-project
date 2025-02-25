@@ -9,4 +9,5 @@ export interface CustomDropdownProps {
     disabled?: boolean;
     placeholder: string;
     selectedValues?: string[];
+    styles?: React.CSSProperties;
 }
