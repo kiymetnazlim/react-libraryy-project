@@ -11,13 +11,13 @@ const Navbar: React.FC = () => {
                     Kütüphane Yönetim Sistemi
                 </Typography>
                 <Button color="inherit" component={Link} to="/kitap-işlemleri">
-                    Kitap İşlemleri
+                    KİTAP İŞLEMLERİ
                 </Button>
                 <Button color="inherit" component={Link} to="/kullanici-işlemleri">
-                    Kullanıcı İşlemleri
+                    KULLANICI İŞLEMLERİ
                 </Button>
                 <Button color="inherit" component={Link} to="/ödünç-işlemleri">
-                    Ödünç İşlemleri
+                    ÖDÜNÇ İŞLEMLERİ
                 </Button>
             </Toolbar>
         </AppBar>

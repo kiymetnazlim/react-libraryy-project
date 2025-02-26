@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
 import { TableProps } from "../types/TableProps.ts";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel, Checkbox } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel } from '@mui/material';
 import { Paper } from '@mui/material';
 import { Delete, Edit } from "@mui/icons-material";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Fade } from '@mui/material';
-import { TransitionProps } from '@mui/material/transitions';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
 interface Table1Props extends TableProps {
     onDelete: (id: number) => void;
+    onUpdate?: (id: number, updatedData: Record<string, any>) => void;
     showDeleteButton?: boolean; // Silme butonu gösterilsin mi?
     showUpdateButton?: boolean; // Güncelle butonu gösterilsin mi?
 }
+interface Row {
+    id: number;
+    // Add the rest of the fields for your row
+    [key: string]: any; // This will allow dynamic access to row properties
+}
 
-const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton = true, showUpdateButton = true }) => {
+const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
     const [orderBy, setOrderBy] = useState<string | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+    const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+    const [updatedRow, setUpdatedRow] = useState<Row | null>(null);  // Update this line to use Row, not Row[]
 
     const handleSort = (field: string) => {
         const isAsc = orderBy === field && order === 'asc';
@@ -46,9 +52,41 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton
         setDeleteItemId(null);
     };
 
+    const handleUpdateClick = (row: Row) => {
+        setUpdatedRow(row);  // Set updatedRow to the clicked row object
+        setUpdateDialogOpen(true);
+    };
+
+    const handleConfirmUpdate = () => {
+        if (updatedRow) {
+            // Handle your update logic here
+            // For example: Update your state or make an API call to update the row in the backend
+            console.log('Updated row:', updatedRow);
+        }
+        setUpdateDialogOpen(false);
+        setUpdatedRow(null);  // Clear updated row after update
+    };
+
+    const handleCancelUpdate = () => {
+        setUpdateDialogOpen(false);
+        setUpdatedRow(null);  // Clear updated row on cancel
+    };
+
+    const turkishToEnglish = (text: string) => {
+        return text
+            .replace(/ç/g, "c").replace(/Ç/g, "C")
+            .replace(/ğ/g, "g").replace(/Ğ/g, "G")
+            .replace(/ı/g, "i").replace(/İ/g, "I")
+            .replace(/ö/g, "o").replace(/Ö/g, "O")
+            .replace(/ş/g, "s").replace(/Ş/g, "S")
+            .replace(/ü/g, "u").replace(/Ü/g, "U");
+    };
+
     const filteredRows = Row.filter((row) =>
         Column.some((col) =>
-            row[col.field]?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            turkishToEnglish(row[col.field]?.toString().toLowerCase() || "").includes(
+                turkishToEnglish(searchTerm.toLowerCase())
+            )
         )
     );
 
@@ -151,7 +189,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {paginatedRows.map((row, index) => (
+                        {paginatedRows.map((row) => (
                             <TableRow
                                 key={row.id}
                                 sx={{
@@ -200,6 +238,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton
                                                 variant="contained"
                                                 color="warning"
                                                 size="small"
+                                                onClick={() => handleUpdateClick(row)}
                                                 startIcon={<Edit />}
                                                 sx={{
                                                     borderRadius: '8px',
@@ -237,15 +276,6 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton
             <Dialog
                 open={deleteDialogOpen}
                 onClose={handleCancelDelete}
-                PaperProps={{
-                    style: {
-                        borderRadius: '12px',
-                        padding: '12px',
-                        maxWidth: '400px'
-                    }
-                }}
-                TransitionComponent={Fade}
-                TransitionProps={{ timeout: 500 }}
             >
                 <DialogTitle sx={{
                     textAlign: 'center',
@@ -280,6 +310,37 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, showDeleteButton
                         sx={{ width: '120px' }}
                     >
                         Sil
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={updateDialogOpen} onClose={handleCancelUpdate}>
+                <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+                    Güncelle
+                </DialogTitle>
+                <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
+                    {updatedRow && Column.map((col) => (
+                        <TextField
+                            key={col.field}
+                            label={col.headerName}
+                            value={updatedRow[col.field] || ''}
+                            onChange={(e) => {
+                                setUpdatedRow({
+                                    ...updatedRow,
+                                    [col.field]: e.target.value,
+                                });
+                            }}
+                            fullWidth
+                            margin="normal"
+                        />
+                    ))}
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', padding: 2, gap: 2 }}>
+                    <Button variant="outlined" onClick={handleCancelUpdate} sx={{ width: '120px' }}>
+                        Vazgeç
+                    </Button>
+                    <Button variant="contained" color="warning" onClick={handleConfirmUpdate} sx={{ width: '120px' }}>
+                        Güncelle
                     </Button>
                 </DialogActions>
             </Dialog>

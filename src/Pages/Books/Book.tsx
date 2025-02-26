@@ -35,7 +35,6 @@ const BookForm: React.FC = () => {
     return (
         <div className="book-form-container">
             <AddBook onAddBook={handleAddBook} />
-            <h2>Kitap Listesi</h2>
             <BookList books={books} onDeleteBook={handleDeleteBook} />
         </div>
     );

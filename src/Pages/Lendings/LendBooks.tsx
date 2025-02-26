@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import CustomDropdown from "../../Components/CustomDropdown";
-import { Button, Typography, Box } from '@mui/material';
+import { Button } from '@mui/material';
 import Table1 from "../../Components/Table1.tsx";
-import { GridValueGetter } from '@mui/x-data-grid';
 
 interface Lending {
     id: number;
@@ -27,9 +26,6 @@ const columns = [
         field: "book",
         headerName: "Kitap Adları",
         width: 300,
-        valueGetter: (params: GridValueGetterParams) => {
-            return params.row.book.join(", ");
-        }
     },
     { field: "date", headerName: "Alış Tarihi", width: 130 },
     { field: "returnDate", headerName: "Teslim Tarihi", width: 130 }
@@ -42,7 +38,6 @@ const LendBooks: React.FC = () => {
     const storedBooks: { title: string }[] = JSON.parse(localStorage.getItem('books') || '[]');
     const storedLendings: Lending[] = JSON.parse(localStorage.getItem('lendings') || '[]');
 
-    // Ödünç alınmış kitapları filtrele
     const lentBooks = storedLendings.map(lending => lending.book);
     const availableBooks = storedBooks
         .map(book => book.title)
@@ -65,16 +60,17 @@ const LendBooks: React.FC = () => {
         );
     };
 
-    // Lendings'i birleştiren yeni fonksiyon
     const combineLendings = (lendings: Lending[]): CombinedLending[] => {
-        const userMap = new Map<string, CombinedLending>();
+        const userDateMap = new Map<string, CombinedLending>();
 
         lendings.forEach((lending) => {
-            if (userMap.has(lending.user)) {
-                const existingLending = userMap.get(lending.user)!;
+            const key = `${lending.user}-${lending.date}`;
+
+            if (userDateMap.has(key)) {
+                const existingLending = userDateMap.get(key)!;
                 existingLending.book.push(lending.book);
             } else {
-                userMap.set(lending.user, {
+                userDateMap.set(key, {
                     id: lending.id,
                     user: lending.user,
                     book: [lending.book],
@@ -84,19 +80,17 @@ const LendBooks: React.FC = () => {
             }
         });
 
-        return Array.from(userMap.values());
+        return Array.from(userDateMap.values());
     };
 
     const handleDeleteLending = (id: number): void => {
         const combinedLending = combineLendings(lendings).find(lending => lending.id === id);
         if (!combinedLending) return;
 
-        // Kullanıcıya ait tüm kayıtları sil
         const updatedLendings = lendings.filter(lending => lending.user !== combinedLending.user);
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
 
-        // Silinen kitapları tekrar kullanılabilir kitaplar listesine ekle
         setBookNames(prev => [...prev, ...combinedLending.book]);
     };
 
@@ -110,9 +104,11 @@ const LendBooks: React.FC = () => {
         const returnDate = new Date(currentDate);
         returnDate.setDate(returnDate.getDate() + 10);
 
+        const maxId = lendings.length > 0 ? Math.max(...lendings.map(l => l.id)) : 0;
+
         const newLendings: Lending[] = selectedBooks.map((book, index) => ({
-            id: lendings.length + index + 1,
-            user: selectedUser,
+            id: maxId + index + 1,
+            user: selectedUser!,
             book: book,
             date: currentDate.toLocaleDateString(),
             returnDate: returnDate.toLocaleDateString()
@@ -122,7 +118,6 @@ const LendBooks: React.FC = () => {
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
 
-        // Seçilen kitapları mevcut listeden kaldır
         const remainingBooks = bookNames.filter((book) => !selectedBooks.includes(book));
         setBookNames(remainingBooks);
 
@@ -133,11 +128,18 @@ const LendBooks: React.FC = () => {
         alert("Ödünç işlemi başarıyla kaydedildi!");
     };
 
-    // Birleştirilmiş lending'leri tabloya göndermeden önce string'e çevir
     const combinedLendingsForTable = combineLendings(lendings).map(lending => ({
         ...lending,
-        book: lending.book.join(', ') // Kitap dizisini virgülle ayrılmış string'e çevir
+        book: lending.book.join(', ')
     }));
+
+    const handleUpdateLending = (id: number): void => {
+        const lendingToUpdate = lendings.find(lending => lending.id === id);
+        if (lendingToUpdate) {
+            // Update the lending logic here, for example:
+            alert(`Updating lending for user: ${lendingToUpdate.user}, books: ${lendingToUpdate.book}`);
+        }
+    };
 
     return (
         <div style={{ padding: "20px" }}>
@@ -209,26 +211,13 @@ const LendBooks: React.FC = () => {
                     Column={columns}
                     Row={combinedLendingsForTable}
                     onDelete={handleDeleteLending}
+                    onUpdate={handleUpdateLending} // Pass the onUpdate function here
                     showDeleteButton={true}
                     showUpdateButton={true}
                 />
             </div>
         </div>
     );
-};
-
-const styles = {
-    container: {
-        display: "flex",
-        flexDirection: "row" as "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: "20px",
-        padding: "20px",
-        backgroundColor: '#f5f5f5',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    }
 };
 
 export default LendBooks;

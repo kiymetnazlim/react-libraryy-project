@@ -32,7 +32,6 @@ const UserForm: React.FC = () => {
     return (
         <div className="user-form-container">
             <AddUser onAddUser={handleAddUser} />
-            <h2>Kullanıcı Listesi</h2>
             <UserList users={users} onDeleteUser={handleDeleteUser} /> {/* Silme fonksiyonunu gönder */}
         </div>
     );
