@@ -154,15 +154,6 @@ const LendBooks: React.FC = () => {
 
     const handleDetails = (row: any) => {
         const userLendings = lendings.filter(lending => lending.user === row.user);
-        // Tarihe göre grupla
-        const groupedLendings = userLendings.reduce((acc, lending) => {
-            if (!acc[lending.date]) {
-                acc[lending.date] = [];
-            }
-            acc[lending.date].push(lending);
-            return acc;
-        }, {} as Record<string, Lending[]>);
-
         setSelectedLendings(userLendings);
         setDetailsOpen(true);
     };
@@ -272,51 +263,29 @@ const LendBooks: React.FC = () => {
                                 <strong>Kullanıcı:</strong> {selectedLendings[0].user}
                             </Typography>
                             <Divider sx={{ my: 2 }} />
-                            {Object.entries(selectedLendings.reduce((acc, lending) => {
-                                if (!acc[lending.date]) {
-                                    acc[lending.date] = [];
-                                }
-                                acc[lending.date].push(lending);
-                                return acc;
-                            }, {} as Record<string, Lending[]>))
-                            .sort(([dateA], [dateB]) => {
-                                return new Date(dateB).getTime() - new Date(dateA).getTime();
-                            })
-                            .map(([date, dateLendings]) => (
-                                <Box key={date} sx={{ mb: 3 }}>
-                                    <Typography variant="subtitle1" 
-                                        sx={{ 
-                                            background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)',
-                                            color: 'white',
-                                            p: 1.5,
-                                            borderRadius: '4px',
-                                            mb: 2,
-                                            boxShadow: '0 2px 4px rgba(33, 150, 243, 0.2)',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center'
-                                        }}>
-                                        <strong>Alış Tarihi:</strong> {date}
+                            <Typography variant="subtitle1" gutterBottom>
+                                <strong>Ödünç Alınan Kitaplar:</strong>
+                            </Typography>
+                            {selectedLendings.map((lending, index) => (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        backgroundColor: '#f8f9fa',
+                                        borderRadius: '4px',
+                                        p: 2,
+                                        mb: 1,
+                                        border: '1px solid #e0e0e0'
+                                    }}
+                                >
+                                    <Typography variant="body1" gutterBottom>
+                                        <strong>Kitap:</strong> {lending.book}
                                     </Typography>
-                                    {dateLendings.map((lending, index) => (
-                                        <Box
-                                            key={`${date}-${index}`}
-                                            sx={{
-                                                backgroundColor: '#f8f9fa',
-                                                borderRadius: '4px',
-                                                p: 2,
-                                                mb: 1,
-                                                border: '1px solid #e0e0e0'
-                                            }}
-                                        >
-                                            <Typography variant="body1" gutterBottom>
-                                                <strong>Kitap:</strong> {lending.book}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                <strong>Teslim Tarihi:</strong> {lending.returnDate}
-                                            </Typography>
-                                        </Box>
-                                    ))}
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Alış Tarihi:</strong> {lending.date}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Teslim Tarihi:</strong> {lending.returnDate}
+                                    </Typography>
                                 </Box>
                             ))}
                         </>

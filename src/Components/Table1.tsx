@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { TableProps } from "../types/TableProps.ts";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { Paper } from '@mui/material';
 import { Delete, Edit, Info } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import 'dayjs/locale/tr'; // Türkçe tarih formatı için
 
 interface Table1Props extends TableProps {
     onDelete: (id: number) => void;
@@ -29,6 +34,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
     const [updatedRow, setUpdatedRow] = useState<Row | null>(null);  // Update this line to use Row, not Row[]
+    const [selectedBookForUpdate, setSelectedBookForUpdate] = useState<string>('');
 
     const handleSort = (field: string) => {
         const isAsc = orderBy === field && order === 'asc';
@@ -55,23 +61,51 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     };
 
     const handleUpdateClick = (row: Row) => {
-        setUpdatedRow(row);  // Set updatedRow to the clicked row object
+        setUpdatedRow(row);
+        // Eğer tek kitap varsa onu seç
+        if (!row.book.includes(',')) {
+            setSelectedBookForUpdate(row.book);
+        }
         setUpdateDialogOpen(true);
     };
 
+    // Seçilen kitabın bilgilerini bulmak için yardımcı fonksiyon
+    const getSelectedBookDetails = (selectedBook: string) => {
+        if (!updatedRow) return null;
+
+        const allBooks = updatedRow.book.split(', ');
+        const allDates = updatedRow.date.split(', ');
+        const allReturnDates = updatedRow.returnDate.split(', ');
+
+        const index = allBooks.indexOf(selectedBook);
+        if (index === -1) return null;
+
+        return {
+            date: allDates[index],
+            returnDate: allReturnDates[index]
+        };
+    };
+
     const handleConfirmUpdate = () => {
-        if (updatedRow) {
-            // Handle your update logic here
-            // For example: Update your state or make an API call to update the row in the backend
-            console.log('Updated row:', updatedRow);
+        if (updatedRow && onUpdate) {
+            const updateData = {
+                ...updatedRow,
+                selectedBook: selectedBookForUpdate || updatedRow.book,
+                date: updatedRow.date,
+                returnDate: updatedRow.returnDate
+            };
+
+            onUpdate(updatedRow.id, updateData);
+            setUpdateDialogOpen(false);
+            setUpdatedRow(null);
+            setSelectedBookForUpdate('');
         }
-        setUpdateDialogOpen(false);
-        setUpdatedRow(null);  // Clear updated row after update
     };
 
     const handleCancelUpdate = () => {
         setUpdateDialogOpen(false);
-        setUpdatedRow(null);  // Clear updated row on cancel
+        setUpdatedRow(null);
+        setSelectedBookForUpdate('');
     };
 
     const turkishToEnglish = (text: string) => {
@@ -337,30 +371,118 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
 
             <Dialog open={updateDialogOpen} onClose={handleCancelUpdate}>
                 <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
-                    Güncelle
+                    Kitap Bilgilerini Güncelle
                 </DialogTitle>
                 <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
-                    {updatedRow && Column.map((col) => (
-                        <TextField
-                            key={col.field}
-                            label={col.headerName}
-                            value={updatedRow[col.field] || ''}
-                            onChange={(e) => {
-                                setUpdatedRow({
-                                    ...updatedRow,
-                                    [col.field]: e.target.value,
-                                });
-                            }}
-                            fullWidth
-                            margin="normal"
-                        />
-                    ))}
+                    {updatedRow && (
+                        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
+                            {!updatedRow.book.includes(',') ? (
+                                // Tek kitap varsa
+                                <>
+                                    <TextField
+                                        label="Kitap"
+                                        value={updatedRow.book}
+                                        disabled
+                                        fullWidth
+                                        margin="normal"
+                                    />
+                                    <DatePicker
+                                        label="Alış Tarihi"
+                                        value={dayjs(updatedRow.date, 'DD.MM.YYYY')}
+                                        onChange={(newValue) => {
+                                            setUpdatedRow({
+                                                ...updatedRow,
+                                                date: newValue ? newValue.format('DD.MM.YYYY') : '',
+                                            });
+                                        }}
+                                        format="DD.MM.YYYY"
+                                        sx={{ width: '100%', mt: 2, mb: 1 }}
+                                    />
+                                    <DatePicker
+                                        label="Teslim Tarihi"
+                                        value={dayjs(updatedRow.returnDate, 'DD.MM.YYYY')}
+                                        onChange={(newValue) => {
+                                            setUpdatedRow({
+                                                ...updatedRow,
+                                                returnDate: newValue ? newValue.format('DD.MM.YYYY') : '',
+                                            });
+                                        }}
+                                        format="DD.MM.YYYY"
+                                        sx={{ width: '100%', mt: 2 }}
+                                    />
+                                </>
+                            ) : (
+                                // Birden fazla kitap varsa
+                                <>
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Kitap Seçin</InputLabel>
+                                        <Select
+                                            value={selectedBookForUpdate}
+                                            onChange={(e) => {
+                                                const selected = e.target.value;
+                                                setSelectedBookForUpdate(selected);
+                                                const details = getSelectedBookDetails(selected);
+                                                if (details) {
+                                                    setUpdatedRow({
+                                                        ...updatedRow,
+                                                        selectedDate: details.date,
+                                                        selectedReturnDate: details.returnDate
+                                                    });
+                                                }
+                                            }}
+                                            label="Kitap Seçin"
+                                        >
+                                            {updatedRow.book.split(', ').map((book: string) => (
+                                                <MenuItem key={book} value={book}>
+                                                    {book}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    {selectedBookForUpdate && (
+                                        <>
+                                            <DatePicker
+                                                label="Alış Tarihi"
+                                                value={dayjs(updatedRow.selectedDate || updatedRow.date, 'DD.MM.YYYY')}
+                                                onChange={(newValue) => {
+                                                    setUpdatedRow({
+                                                        ...updatedRow,
+                                                        selectedDate: newValue ? newValue.format('DD.MM.YYYY') : '',
+                                                    });
+                                                }}
+                                                format="DD.MM.YYYY"
+                                                sx={{ width: '100%', mt: 2, mb: 1 }}
+                                            />
+                                            <DatePicker
+                                                label="Teslim Tarihi"
+                                                value={dayjs(updatedRow.selectedReturnDate || updatedRow.returnDate, 'DD.MM.YYYY')}
+                                                onChange={(newValue) => {
+                                                    setUpdatedRow({
+                                                        ...updatedRow,
+                                                        selectedReturnDate: newValue ? newValue.format('DD.MM.YYYY') : '',
+                                                    });
+                                                }}
+                                                format="DD.MM.YYYY"
+                                                sx={{ width: '100%', mt: 2 }}
+                                            />
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </LocalizationProvider>
+                    )}
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'center', padding: 2, gap: 2 }}>
                     <Button variant="outlined" onClick={handleCancelUpdate} sx={{ width: '120px' }}>
                         Vazgeç
                     </Button>
-                    <Button variant="contained" color="warning" onClick={handleConfirmUpdate} sx={{ width: '120px' }}>
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={handleConfirmUpdate}
+                        sx={{ width: '120px' }}
+                        disabled={updatedRow?.book.includes(',') && !selectedBookForUpdate}
+                    >
                         Güncelle
                     </Button>
                 </DialogActions>
