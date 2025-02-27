@@ -3,6 +3,7 @@ import CustomDropdown from "../../Components/CustomDropdown";
 import { Button } from '@mui/material';
 import Table1 from "../../Components/Table1.tsx";
 import { Row } from "../../types/TableProps.ts";
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 interface Lending {
     id: number;
@@ -10,6 +11,7 @@ interface Lending {
     book: string;
     date: string;
     returnDate: string;
+    status: 'active' | 'returned';
 }
 
 interface CombinedLending {
@@ -18,6 +20,8 @@ interface CombinedLending {
     book: string[];
     date: string;
     returnDate: string;
+    status: 'active' | 'returned';
+    allDates: { date: string; returnDate: string; books: string[]; status: 'active' | 'returned' }[];
 }
 
 const columns = [
@@ -27,7 +31,12 @@ const columns = [
         field: "book",
         headerName: "Kitap Adları",
         width: 300,
-    },
+    }
+];
+
+const detailColumns = [
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "book", headerName: "Kitap Adı", width: 300 },
     { field: "date", headerName: "Alış Tarihi", width: 130 },
     { field: "returnDate", headerName: "Teslim Tarihi", width: 130 }
 ];
@@ -49,6 +58,8 @@ const LendBooks: React.FC = () => {
     const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
     const [lendings, setLendings] = useState<Lending[]>(storedLendings);
     const [dropdownKey, setDropdownKey] = useState<number>(0);
+    const [detailData, setDetailData] = useState<any[]>([]);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
     const handleUserSelect = (user: string): void => {
         setSelectedUser(user);
@@ -62,26 +73,48 @@ const LendBooks: React.FC = () => {
     };
 
     const combineLendings = (lendings: Lending[]): CombinedLending[] => {
-        const userDateMap = new Map<string, CombinedLending>();
+        const userMap = new Map<string, CombinedLending>();
 
         lendings.forEach((lending) => {
-            const key = `${lending.user}-${lending.date}`;
+            const key = lending.user;
 
-            if (userDateMap.has(key)) {
-                const existingLending = userDateMap.get(key)!;
+            if (userMap.has(key)) {
+                const existingLending = userMap.get(key)!;
                 existingLending.book.push(lending.book);
+                if (!existingLending.allDates) {
+                    existingLending.allDates = [{
+                        date: existingLending.date,
+                        returnDate: existingLending.returnDate,
+                        books: [existingLending.book[0]],
+                        status: existingLending.status
+                    }];
+                }
+                existingLending.allDates.push({
+                    date: lending.date,
+                    returnDate: lending.returnDate,
+                    books: [lending.book],
+                    status: lending.status
+                });
+                existingLending.status = existingLending.allDates.some(d => d.status === 'active') ? 'active' : 'returned';
             } else {
-                userDateMap.set(key, {
+                userMap.set(key, {
                     id: lending.id,
                     user: lending.user,
                     book: [lending.book],
-                    date: lending.date,
-                    returnDate: lending.returnDate
+                    date: '',
+                    returnDate: '',
+                    status: lending.status,
+                    allDates: [{
+                        date: lending.date,
+                        returnDate: lending.returnDate,
+                        books: [lending.book],
+                        status: lending.status
+                    }]
                 });
             }
         });
 
-        return Array.from(userDateMap.values());
+        return Array.from(userMap.values());
     };
 
     const handleDeleteLending = (id: number): void => {
@@ -112,7 +145,8 @@ const LendBooks: React.FC = () => {
             user: selectedUser!,
             book: book,
             date: currentDate.toLocaleDateString(),
-            returnDate: returnDate.toLocaleDateString()
+            returnDate: returnDate.toLocaleDateString(),
+            status: 'active'
         }));
 
         const updatedLendings = [...lendings, ...newLendings];
@@ -135,23 +169,80 @@ const LendBooks: React.FC = () => {
     }));
 
     const handleUpdateLending = (updatedRow: Row): void => {
-        const lendingToUpdate = lendings.find(lending => lending.id === updatedRow.id);
-        if (lendingToUpdate) {
-            const updatedLendings = lendings.map(lending => {
-                if (lending.id === updatedRow.id) {
-                    return {
-                        ...lending,
-                        date: updatedRow.date,
-                        returnDate: updatedRow.returnDate
-                    };
-                }
-                return lending;
-            });
+        const combinedLending = combineLendings(lendings).find(lending => lending.id === updatedRow.id);
+        if (!combinedLending) return;
 
-            localStorage.setItem('lendings', JSON.stringify(updatedLendings));
-            setLendings(updatedLendings);
-            alert("Ödünç bilgileri başarıyla güncellendi!");
-        }
+        const updatedLendings = lendings.map(lending => {
+            if (lending.user === combinedLending.user) {
+                return {
+                    ...lending,
+                    user: updatedRow.user
+                };
+            }
+            return lending;
+        });
+
+        localStorage.setItem('lendings', JSON.stringify(updatedLendings));
+        setLendings(updatedLendings);
+        alert("Kullanıcı başarıyla güncellendi!");
+    };
+
+    const handleDetailClick = (row: Row) => {
+        const selectedLending = combinedLendingsForTable.find(r => r.id === row.id);
+        if (!selectedLending || !selectedLending.allDates) return;
+
+        const detailRows = selectedLending.allDates.flatMap((dateInfo, dateIndex) =>
+            dateInfo.books.map((book, bookIndex) => ({
+                id: row.id + dateIndex + bookIndex,
+                book: book,
+                date: dateInfo.date,
+                returnDate: dateInfo.returnDate,
+                status: dateInfo.status
+            }))
+        );
+
+        setDetailData(detailRows);
+        setDetailDialogOpen(true);
+    };
+
+    const handleCloseDetailDialog = () => {
+        setDetailDialogOpen(false);
+        setDetailData([]);
+    };
+
+    const handleReturnBook = (row: Row): void => {
+        // Lending listesinde durumu güncelle
+        const updatedLendings = lendings.map(lending => {
+            if (lending.book === row.book &&
+                lending.date === row.date &&
+                lending.returnDate === row.returnDate) {
+                return {
+                    ...lending,
+                    status: 'returned' as const
+                };
+            }
+            return lending;
+        });
+
+        // LocalStorage'ı güncelle
+        localStorage.setItem('lendings', JSON.stringify(updatedLendings));
+        setLendings(updatedLendings);
+
+        // Kitabı mevcut kitaplar listesine geri ekle
+        setBookNames(prev => [...prev, row.book]);
+
+        // Detay verilerini güncelle
+        setDetailData(prev => prev.map(item => {
+            if (item.id === row.id) {
+                return {
+                    ...item,
+                    status: 'returned' as const
+                };
+            }
+            return item;
+        }));
+
+        alert("Kitap başarıyla iade edildi!");
     };
 
     return (
@@ -225,10 +316,66 @@ const LendBooks: React.FC = () => {
                     Row={combinedLendingsForTable}
                     onDelete={handleDeleteLending}
                     onUpdate={handleUpdateLending}
+                    onDetail={handleDetailClick}
                     showDeleteButton={true}
                     showUpdateButton={true}
+                    showDetailsButton={true}
+                    isUserUpdate={true}
                 />
             </div>
+
+            <Dialog
+                open={detailDialogOpen}
+                onClose={handleCloseDetailDialog}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle sx={{
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    backgroundColor: '#f5f5f5',
+                    borderBottom: '1px solid #e0e0e0'
+                }}>
+                    {detailData[0] ? `${combinedLendingsForTable.find(r => r.id === Math.floor(detailData[0].id))?.user} - Ödünç Detayları` : 'Ödünç Detayları'}
+                </DialogTitle>
+                <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
+                    <Table1
+                        Column={detailColumns}
+                        Row={detailData}
+                        showDeleteButton={false}
+                        showUpdateButton={true}
+                        showDetailsButton={false}
+                        showReturnButton={true}
+                        onUpdate={handleUpdateLending}
+                        onReturn={handleReturnBook}
+                        onDelete={() => { }}
+                    />
+                </DialogContent>
+                <DialogActions sx={{
+                    justifyContent: 'center',
+                    padding: 2,
+                    backgroundColor: '#f5f5f5',
+                    borderTop: '1px solid #e0e0e0'
+                }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleCloseDetailDialog}
+                        sx={{
+                            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                            boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+                            padding: '8px 30px',
+                            borderRadius: '8px',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)',
+                                transform: 'scale(1.02)',
+                                transition: 'all 0.2s ease-in-out'
+                            }
+                        }}
+                    >
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

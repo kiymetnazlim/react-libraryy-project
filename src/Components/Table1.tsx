@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TableProps, Row } from "../types/TableProps.ts";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { Paper } from '@mui/material';
 import { Delete, Edit, Info } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs'; // dayjs kütüphanesini ekleyin
 
 interface Table1Props extends TableProps {
     showDeleteButton?: boolean;
     showUpdateButton?: boolean;
     showDetailsButton?: boolean;
+    showReturnButton?: boolean;
+    isUserUpdate?: boolean;
+    isBookUpdate?: boolean;
+    availableBooks?: string[];
+    onDetail?: (row: Row) => void;
+    onReturn?: (row: Row) => void;
 }
 
-const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true, showDetailsButton = false }) => {
+const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, onDetail, onReturn, showDeleteButton = true, showUpdateButton = true, showDetailsButton = false, showReturnButton = false, isUserUpdate = false, isBookUpdate = false, availableBooks = [] }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +29,13 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     const [updatedRow, setUpdatedRow] = useState<Row | null>(null);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState<Row | null>(null);
+    const [users, setUsers] = useState<string[]>([]);
+
+    useEffect(() => {
+        const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        const userNames = storedUsers.map((user: { name: string }) => user.name);
+        setUsers(userNames);
+    }, []);
 
     const handleSort = (field: string) => {
         const isAsc = orderBy === field && order === 'asc';
@@ -53,37 +62,13 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     };
 
     const handleUpdateClick = (row: Row) => {
-        const formattedRow = { ...row };
-        Column.forEach(col => {
-            if (col.field.toLowerCase().includes('date') || col.field.toLowerCase().includes('tarih')) {
-                if (col.field === 'date') {
-                    formattedRow[col.field] = row[col.field] ?
-                        dayjs(new Date(row[col.field])).format('DD/MM/YYYY') :
-                        dayjs().format('DD/MM/YYYY');
-                } else {
-                    formattedRow[col.field] = row[col.field] ?
-                        dayjs(new Date(row[col.field])).format('DD/MM/YYYY') :
-                        null;
-                }
-            }
-        });
-        setUpdatedRow(formattedRow);
+        setUpdatedRow(row);
         setUpdateDialogOpen(true);
     };
 
     const handleConfirmUpdate = () => {
         if (updatedRow && onUpdate) {
-            const processedRow = { ...updatedRow };
-            Column.forEach(col => {
-                if (col.field.toLowerCase().includes('date') || col.field.toLowerCase().includes('tarih')) {
-                    if (processedRow[col.field]) {
-                        const [day, month, year] = processedRow[col.field].split('/');
-                        const date = new Date(`${year}-${month}-${day}`);
-                        processedRow[col.field] = date.toLocaleDateString();
-                    }
-                }
-            });
-            onUpdate(processedRow);
+            onUpdate(updatedRow);
         }
         setUpdateDialogOpen(false);
         setUpdatedRow(null);
@@ -140,28 +125,8 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
         setPage(0);
     };
 
-    const handleDateChange = (field: string, date: Dayjs | null) => {
-        if (updatedRow) {
-            setUpdatedRow({
-                ...updatedRow,
-                [field]: date ? date.format('DD/MM/YYYY') : null,
-            });
-        }
-    };
-
-    const formatDate = (dateStr: string | null) => {
-        if (!dateStr) {
-            // Eğer tarih boşsa bugünün tarihini döndür
-            return dayjs();
-        }
-        // Farklı tarih formatlarını destekle
-        const formats = ['DD/MM/YYYY', 'DD.MM.YYYY', 'YYYY-MM-DD', 'M/D/YYYY'];
-        const parsedDate = dayjs(dateStr, formats);
-        return parsedDate.isValid() ? parsedDate : dayjs();
-    };
-
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <>
             <TableContainer
                 component={Paper}
                 sx={{
@@ -246,11 +211,16 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                                 key={row.id}
                                 sx={{
                                     '&:nth-of-type(odd)': {
-                                        backgroundColor: '#f8f9fa'
+                                        backgroundColor: showReturnButton ?
+                                            (row.status === 'returned' ? '#f8f9fa80' : '#f8f9fa') :
+                                            '#f8f9fa'
                                     },
                                     '&:hover': {
-                                        backgroundColor: '#f5f5f5'
+                                        backgroundColor: showReturnButton ?
+                                            (row.status === 'returned' ? '#f5f5f580' : '#f5f5f5') :
+                                            '#f5f5f5'
                                     },
+                                    opacity: showReturnButton && row.status === 'returned' ? 0.6 : 1,
                                     transition: 'background-color 0.2s ease'
                                 }}
                             >
@@ -292,6 +262,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                                                 size="small"
                                                 onClick={() => handleUpdateClick(row)}
                                                 startIcon={<Edit />}
+                                                disabled={showReturnButton && row.status === 'returned'}
                                                 sx={{
                                                     borderRadius: '8px',
                                                     textTransform: 'none',
@@ -304,12 +275,33 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                                                 Güncelle
                                             </Button>
                                         )}
+                                        {showReturnButton && (
+                                            <Button
+                                                variant="contained"
+                                                color="warning"
+                                                size="small"
+                                                onClick={() => onReturn && onReturn(row)}
+                                                disabled={row.status === 'returned'}
+                                                sx={{
+                                                    borderRadius: '8px',
+                                                    textTransform: 'none',
+                                                    boxShadow: 'none',
+                                                    backgroundColor: row.status === 'returned' ? '#ed6c02' : '#4caf50',
+                                                    '&:hover': {
+                                                        backgroundColor: row.status === 'returned' ? '#ed6c02' : '#388e3c',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                    }
+                                                }}
+                                            >
+                                                {row.status === 'returned' ? 'İade Edildi' : 'İade Et'}
+                                            </Button>
+                                        )}
                                         {showDetailsButton && (
                                             <Button
                                                 variant="contained"
                                                 color="primary"
                                                 size="small"
-                                                onClick={() => handleDetailClick(row)}
+                                                onClick={() => onDetail && onDetail(row)}
                                                 startIcon={<Info />}
                                                 sx={{
                                                     borderRadius: '8px',
@@ -389,54 +381,73 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
 
             <Dialog open={updateDialogOpen} onClose={handleCancelUpdate}>
                 <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
-                    Güncelle
+                    {isUserUpdate ? 'Kullanıcı Güncelle' : isBookUpdate ? 'Kitap Güncelle' : 'Güncelle'}
                 </DialogTitle>
-                <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
-                    {updatedRow && Column.map((col) => {
-                        if (col.field === 'id') return null;
-
-                        if (col.field.toLowerCase().includes('date') ||
-                            col.field.toLowerCase().includes('tarih')) {
-                            // Tarihi formatla ve varsayılan değer olarak bugünü kullan
-                            const dateValue = col.field === 'date' ? 
-                                formatDate(updatedRow[col.field]) : 
-                                formatDate(updatedRow[col.field]);
-                            
-                            return (
-                                <Box key={col.field} sx={{ my: 2 }}>
-                                    <DatePicker
-                                        label={col.headerName}
-                                        value={dateValue}
-                                        onChange={(newValue) => handleDateChange(col.field, newValue)}
-                                        sx={{ width: '100%' }}
-                                        format="DD/MM/YYYY"
-                                        slotProps={{
-                                            textField: {
-                                                fullWidth: true,
-                                                margin: "normal"
-                                            }
-                                        }}
-                                    />
-                                </Box>
-                            );
-                        }
-
-                        return (
-                            <TextField
-                                key={col.field}
-                                label={col.headerName}
-                                value={updatedRow[col.field] ?? ''} // undefined yerine boş string
-                                onChange={(e) => {
-                                    setUpdatedRow({
-                                        ...updatedRow,
-                                        [col.field]: e.target.value,
-                                    });
-                                }}
-                                fullWidth
-                                margin="normal"
-                            />
-                        );
-                    })}
+                <DialogContent sx={{ paddingX: 4, paddingY: 2, minWidth: '400px' }}>
+                    {updatedRow && (
+                        isUserUpdate ? (
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Kullanıcı</InputLabel>
+                                <Select
+                                    value={updatedRow.user || ''}
+                                    label="Kullanıcı"
+                                    onChange={(e) => {
+                                        setUpdatedRow({
+                                            ...updatedRow,
+                                            user: e.target.value,
+                                        });
+                                    }}
+                                >
+                                    {users.map((user) => (
+                                        <MenuItem key={user} value={user}>
+                                            {user}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        ) : isBookUpdate ? (
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Kitap</InputLabel>
+                                <Select
+                                    value={updatedRow.book || ''}
+                                    label="Kitap"
+                                    onChange={(e) => {
+                                        setUpdatedRow({
+                                            ...updatedRow,
+                                            book: e.target.value,
+                                        });
+                                    }}
+                                >
+                                    <MenuItem value={updatedRow.book}>
+                                        {updatedRow.book} (Mevcut)
+                                    </MenuItem>
+                                    {availableBooks.map((book) => (
+                                        <MenuItem key={book} value={book}>
+                                            {book}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        ) : (
+                            Column.map((col) => (
+                                <TextField
+                                    key={col.field}
+                                    label={col.headerName}
+                                    value={updatedRow[col.field] || ''}
+                                    onChange={(e) => {
+                                        if (col.field === 'id') return;
+                                        setUpdatedRow({
+                                            ...updatedRow,
+                                            [col.field]: e.target.value,
+                                        });
+                                    }}
+                                    fullWidth
+                                    margin="normal"
+                                    disabled={col.field === 'id'}
+                                />
+                            ))
+                        )
+                    )}
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'center', padding: 2, gap: 2 }}>
                     <Button variant="outlined" onClick={handleCancelUpdate} sx={{ width: '120px' }}>
@@ -465,7 +476,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                     </Button>
                 </DialogActions>
             </Dialog>
-        </LocalizationProvider>
+        </>
     );
 };
 
