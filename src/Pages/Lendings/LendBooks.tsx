@@ -194,6 +194,7 @@ const LendBooks: React.FC = () => {
         const detailRows = selectedLending.allDates.flatMap((dateInfo, dateIndex) =>
             dateInfo.books.map((book, bookIndex) => ({
                 id: row.id + dateIndex + bookIndex,
+                user: selectedLending.user,
                 book: book,
                 date: dateInfo.date,
                 returnDate: dateInfo.returnDate,
@@ -318,7 +319,7 @@ const LendBooks: React.FC = () => {
                     onUpdate={handleUpdateLending}
                     onDetail={handleDetailClick}
                     showDeleteButton={true}
-                    showUpdateButton={true}
+                    showUpdateButton={false}
                     showDetailsButton={true}
                     isUserUpdate={true}
                 />
