@@ -33,15 +33,15 @@ const AddBook: React.FC<AddBookProps> = ({ onAddBook }) => {
 
     return (
         <div>
-            <div style={{ 
-                display: "flex", 
+            <div style={{
+                display: "flex",
                 justifyContent: "flex-end",
                 padding: "20px",
                 marginTop: "20px"
             }}>
-                <Button 
-                    onClick={() => setOpen(true)} 
-                    variant="contained" 
+                <Button
+                    onClick={() => setOpen(true)}
+                    variant="contained"
                     size="large"
                     sx={{
                         background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
@@ -98,21 +98,7 @@ const AddBook: React.FC<AddBookProps> = ({ onAddBook }) => {
                                 fontSize: '16px'
                             }}
                         />
-                        <input
-                            type="number"
-                            name="pageCount"
-                            value={pageCount}
-                            onChange={handleChange}
-                            placeholder="Sayfa Sayısı"
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid #e0e0e0',
-                                borderRadius: '4px',
-                                fontSize: '16px'
-                            }}
-                        />
+
                     </div>
 
                     <div style={{

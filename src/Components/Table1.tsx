@@ -4,6 +4,10 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Butto
 import { Paper } from '@mui/material';
 import { Delete, Edit, Info } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs'; // dayjs kütüphanesini ekleyin
 
 interface Table1Props extends TableProps {
     showDeleteButton?: boolean;
@@ -49,13 +53,37 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     };
 
     const handleUpdateClick = (row: Row) => {
-        setUpdatedRow(row);
+        const formattedRow = { ...row };
+        Column.forEach(col => {
+            if (col.field.toLowerCase().includes('date') || col.field.toLowerCase().includes('tarih')) {
+                if (col.field === 'date') {
+                    formattedRow[col.field] = row[col.field] ?
+                        dayjs(new Date(row[col.field])).format('DD/MM/YYYY') :
+                        dayjs().format('DD/MM/YYYY');
+                } else {
+                    formattedRow[col.field] = row[col.field] ?
+                        dayjs(new Date(row[col.field])).format('DD/MM/YYYY') :
+                        null;
+                }
+            }
+        });
+        setUpdatedRow(formattedRow);
         setUpdateDialogOpen(true);
     };
 
     const handleConfirmUpdate = () => {
         if (updatedRow && onUpdate) {
-            onUpdate(updatedRow);
+            const processedRow = { ...updatedRow };
+            Column.forEach(col => {
+                if (col.field.toLowerCase().includes('date') || col.field.toLowerCase().includes('tarih')) {
+                    if (processedRow[col.field]) {
+                        const [day, month, year] = processedRow[col.field].split('/');
+                        const date = new Date(`${year}-${month}-${day}`);
+                        processedRow[col.field] = date.toLocaleDateString();
+                    }
+                }
+            });
+            onUpdate(processedRow);
         }
         setUpdateDialogOpen(false);
         setUpdatedRow(null);
@@ -112,8 +140,28 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
         setPage(0);
     };
 
+    const handleDateChange = (field: string, date: Dayjs | null) => {
+        if (updatedRow) {
+            setUpdatedRow({
+                ...updatedRow,
+                [field]: date ? date.format('DD/MM/YYYY') : null,
+            });
+        }
+    };
+
+    const formatDate = (dateStr: string | null) => {
+        if (!dateStr) {
+            // Eğer tarih boşsa bugünün tarihini döndür
+            return dayjs();
+        }
+        // Farklı tarih formatlarını destekle
+        const formats = ['DD/MM/YYYY', 'DD.MM.YYYY', 'YYYY-MM-DD', 'M/D/YYYY'];
+        const parsedDate = dayjs(dateStr, formats);
+        return parsedDate.isValid() ? parsedDate : dayjs();
+    };
+
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
             <TableContainer
                 component={Paper}
                 sx={{
@@ -344,23 +392,51 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                     Güncelle
                 </DialogTitle>
                 <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
-                    {updatedRow && Column.map((col) => (
-                        <TextField
-                            key={col.field}
-                            label={col.headerName}
-                            value={updatedRow[col.field] || ''}
-                            onChange={(e) => {
-                                if (col.field === 'id') return;
-                                setUpdatedRow({
-                                    ...updatedRow,
-                                    [col.field]: e.target.value,
-                                });
-                            }}
-                            fullWidth
-                            margin="normal"
-                            disabled={col.field === 'id'}
-                        />
-                    ))}
+                    {updatedRow && Column.map((col) => {
+                        if (col.field === 'id') return null;
+
+                        if (col.field.toLowerCase().includes('date') ||
+                            col.field.toLowerCase().includes('tarih')) {
+                            // Tarihi formatla ve varsayılan değer olarak bugünü kullan
+                            const dateValue = col.field === 'date' ? 
+                                formatDate(updatedRow[col.field]) : 
+                                formatDate(updatedRow[col.field]);
+                            
+                            return (
+                                <Box key={col.field} sx={{ my: 2 }}>
+                                    <DatePicker
+                                        label={col.headerName}
+                                        value={dateValue}
+                                        onChange={(newValue) => handleDateChange(col.field, newValue)}
+                                        sx={{ width: '100%' }}
+                                        format="DD/MM/YYYY"
+                                        slotProps={{
+                                            textField: {
+                                                fullWidth: true,
+                                                margin: "normal"
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            );
+                        }
+
+                        return (
+                            <TextField
+                                key={col.field}
+                                label={col.headerName}
+                                value={updatedRow[col.field] ?? ''} // undefined yerine boş string
+                                onChange={(e) => {
+                                    setUpdatedRow({
+                                        ...updatedRow,
+                                        [col.field]: e.target.value,
+                                    });
+                                }}
+                                fullWidth
+                                margin="normal"
+                            />
+                        );
+                    })}
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'center', padding: 2, gap: 2 }}>
                     <Button variant="outlined" onClick={handleCancelUpdate} sx={{ width: '120px' }}>
@@ -389,7 +465,7 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                     </Button>
                 </DialogActions>
             </Dialog>
-        </>
+        </LocalizationProvider>
     );
 };
 
