@@ -61,16 +61,24 @@ const LendBooks: React.FC = () => {
     };
 
     const combineLendings = (lendings: Lending[]): CombinedLending[] => {
-        const userDateMap = new Map<string, CombinedLending>();
+        const userMap = new Map<string, CombinedLending>();
 
         lendings.forEach((lending) => {
-            const key = `${lending.user}-${lending.date}`;
+            const key = lending.user;
 
-            if (userDateMap.has(key)) {
-                const existingLending = userDateMap.get(key)!;
-                existingLending.book.push(lending.book);
+            if (userMap.has(key)) {
+                const existingLending = userMap.get(key)!;
+                if (!existingLending.book.includes(lending.book)) {
+                    existingLending.book.push(lending.book);
+                }
+                const currentDate = new Date(lending.date);
+                const existingDate = new Date(existingLending.date);
+                if (currentDate > existingDate) {
+                    existingLending.date = lending.date;
+                    existingLending.returnDate = lending.returnDate;
+                }
             } else {
-                userDateMap.set(key, {
+                userMap.set(key, {
                     id: lending.id,
                     user: lending.user,
                     book: [lending.book],
@@ -80,7 +88,7 @@ const LendBooks: React.FC = () => {
             }
         });
 
-        return Array.from(userDateMap.values());
+        return Array.from(userMap.values());
     };
 
     const handleDeleteLending = (id: number): void => {
@@ -211,7 +219,7 @@ const LendBooks: React.FC = () => {
                     Column={columns}
                     Row={combinedLendingsForTable}
                     onDelete={handleDeleteLending}
-                    onUpdate={handleUpdateLending} // Pass the onUpdate function here
+                    onUpdate={handleUpdateLending}
                     showDeleteButton={true}
                     showUpdateButton={true}
                 />

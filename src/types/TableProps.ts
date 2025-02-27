@@ -13,18 +13,17 @@ export interface Row {
 
 }
 
-// export interface Pagination {
-//     page: number;
-//     pageSize: number; //sayfa başına veri sayısı
-//     totalItems: number; //toplamveri sayııs
-// }
 
 export interface TableProps {
     Column: Column[];
     Row: Row[];
-    onDelete?:(id:number)=>void;
-    
-    // Pagination: Pagination[];
+    onDelete: (id: number) => void;
+    onUpdate?: (id: number, updatedData: Record<string, any>) => void;
+    showDeleteButton?: boolean;
+    showUpdateButton?: boolean;
+    dialogContent?: (row: Row) => React.ReactNode;
+
+
 
 
 

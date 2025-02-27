@@ -15,8 +15,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     placeholder = "Select an option",
     selectedValues = [],
 }) => {
+    //kullanıcı seçimlerini göstermede kullanılır. 
+    //Çoklu seçim yapıldığında, bu selectedValues dizisi virgülle ayrılmış bir metin olarak kullanıcıya gösterilir.
     const [displayValue, setDisplayValue] = useState<string>('');
-
+    //kullanıcı birkaç seçenek seçtiğinde, bu değerlerin her biri selectedValues dizisine eklenir.
     useEffect(() => {
         if (multiple && selectedValues.length > 0) {
             setDisplayValue(selectedValues.join(', '));
