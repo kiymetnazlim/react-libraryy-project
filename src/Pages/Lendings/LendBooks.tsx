@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CustomDropdown from "../../Components/CustomDropdown";
-import { Button } from '@mui/material';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Divider, Box } from '@mui/material';
+import { Info } from '@mui/icons-material';
 import Table1 from "../../Components/Table1.tsx";
 
 interface Lending {
@@ -48,6 +49,8 @@ const LendBooks: React.FC = () => {
     const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
     const [lendings, setLendings] = useState<Lending[]>(storedLendings);
     const [dropdownKey, setDropdownKey] = useState<number>(0);
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [selectedLendings, setSelectedLendings] = useState<Lending[]>([]);
 
     const handleUserSelect = (user: string): void => {
         setSelectedUser(user);
@@ -149,6 +152,26 @@ const LendBooks: React.FC = () => {
         }
     };
 
+    const handleDetails = (row: any) => {
+        const userLendings = lendings.filter(lending => lending.user === row.user);
+        // Tarihe göre grupla
+        const groupedLendings = userLendings.reduce((acc, lending) => {
+            if (!acc[lending.date]) {
+                acc[lending.date] = [];
+            }
+            acc[lending.date].push(lending);
+            return acc;
+        }, {} as Record<string, Lending[]>);
+
+        setSelectedLendings(userLendings);
+        setDetailsOpen(true);
+    };
+
+    const handleCloseDetails = () => {
+        setDetailsOpen(false);
+        setSelectedLendings([]);
+    };
+
     return (
         <div style={{ padding: "20px" }}>
             <div style={{
@@ -222,8 +245,100 @@ const LendBooks: React.FC = () => {
                     onUpdate={handleUpdateLending}
                     showDeleteButton={true}
                     showUpdateButton={true}
+                    showDetailsButton={true}
+                    onDetails={handleDetails}
                 />
             </div>
+
+            {/* Detaylar Modal */}
+            <Dialog
+                open={detailsOpen}
+                onClose={handleCloseDetails}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle sx={{
+                    backgroundColor: '#f5f5f5',
+                    borderBottom: '1px solid #e0e0e0'
+                }}>
+                    <Typography variant="h6" component="div">
+                        Ödünç Detayları
+                    </Typography>
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {selectedLendings.length > 0 && (
+                        <>
+                            <Typography variant="subtitle1" gutterBottom>
+                                <strong>Kullanıcı:</strong> {selectedLendings[0].user}
+                            </Typography>
+                            <Divider sx={{ my: 2 }} />
+                            {Object.entries(selectedLendings.reduce((acc, lending) => {
+                                if (!acc[lending.date]) {
+                                    acc[lending.date] = [];
+                                }
+                                acc[lending.date].push(lending);
+                                return acc;
+                            }, {} as Record<string, Lending[]>))
+                            .sort(([dateA], [dateB]) => {
+                                return new Date(dateB).getTime() - new Date(dateA).getTime();
+                            })
+                            .map(([date, dateLendings]) => (
+                                <Box key={date} sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle1" 
+                                        sx={{ 
+                                            background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)',
+                                            color: 'white',
+                                            p: 1.5,
+                                            borderRadius: '4px',
+                                            mb: 2,
+                                            boxShadow: '0 2px 4px rgba(33, 150, 243, 0.2)',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}>
+                                        <strong>Alış Tarihi:</strong> {date}
+                                    </Typography>
+                                    {dateLendings.map((lending, index) => (
+                                        <Box
+                                            key={`${date}-${index}`}
+                                            sx={{
+                                                backgroundColor: '#f8f9fa',
+                                                borderRadius: '4px',
+                                                p: 2,
+                                                mb: 1,
+                                                border: '1px solid #e0e0e0'
+                                            }}
+                                        >
+                                            <Typography variant="body1" gutterBottom>
+                                                <strong>Kitap:</strong> {lending.book}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                <strong>Teslim Tarihi:</strong> {lending.returnDate}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ))}
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    padding: 2
+                }}>
+                    <Button
+                        onClick={handleCloseDetails}
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            borderRadius: '8px',
+                            textTransform: 'none'
+                        }}
+                    >
+                        Kapat
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

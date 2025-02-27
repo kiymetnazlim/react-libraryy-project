@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { TableProps } from "../types/TableProps.ts";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel } from '@mui/material';
 import { Paper } from '@mui/material';
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit, Info } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
 interface Table1Props extends TableProps {
     onDelete: (id: number) => void;
     onUpdate?: (id: number, updatedData: Record<string, any>) => void;
-    showDeleteButton?: boolean; // Silme butonu gösterilsin mi?
-    showUpdateButton?: boolean; // Güncelle butonu gösterilsin mi?
+    showDeleteButton?: boolean;
+    showUpdateButton?: boolean;
+    showDetailsButton?: boolean;
+    onDetails?: (row: Row) => void;
 }
 interface Row {
     id: number;
@@ -17,7 +19,7 @@ interface Row {
     [key: string]: any; // This will allow dynamic access to row properties
 }
 
-const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true }) => {
+const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true, showDetailsButton = false, onDetails }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
@@ -250,6 +252,25 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                                                 }}
                                             >
                                                 Güncelle
+                                            </Button>
+                                        )}
+                                        {showDetailsButton && onDetails && (
+                                            <Button
+                                                variant="contained"
+                                                color="info"
+                                                size="small"
+                                                onClick={() => onDetails(row)}
+                                                startIcon={<Info />}
+                                                sx={{
+                                                    borderRadius: '8px',
+                                                    textTransform: 'none',
+                                                    boxShadow: 'none',
+                                                    '&:hover': {
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                    }
+                                                }}
+                                            >
+                                                Detaylar
                                             </Button>
                                         )}
                                     </Box>
