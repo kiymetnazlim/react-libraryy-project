@@ -1,30 +1,17 @@
 import React, { useState } from 'react';
-import { TableProps } from "../types/TableProps.ts";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { TableProps, Row } from "../types/TableProps.ts";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box, TablePagination, TextField, TableSortLabel } from '@mui/material';
 import { Paper } from '@mui/material';
 import { Delete, Edit, Info } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import 'dayjs/locale/tr'; // Türkçe tarih formatı için
 
 interface Table1Props extends TableProps {
-    onDelete: (id: number) => void;
-    onUpdate?: (id: number, updatedData: Record<string, any>) => void;
     showDeleteButton?: boolean;
     showUpdateButton?: boolean;
     showDetailsButton?: boolean;
-    onDetails?: (row: Row) => void;
-}
-interface Row {
-    id: number;
-    // Add the rest of the fields for your row
-    [key: string]: any; // This will allow dynamic access to row properties
 }
 
-const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true, showDetailsButton = false, onDetails }) => {
+const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDeleteButton = true, showUpdateButton = true, showDetailsButton = false }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
@@ -33,8 +20,9 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-    const [updatedRow, setUpdatedRow] = useState<Row | null>(null);  // Update this line to use Row, not Row[]
-    const [selectedBookForUpdate, setSelectedBookForUpdate] = useState<string>('');
+    const [updatedRow, setUpdatedRow] = useState<Row | null>(null);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+    const [selectedRow, setSelectedRow] = useState<Row | null>(null);
 
     const handleSort = (field: string) => {
         const isAsc = orderBy === field && order === 'asc';
@@ -62,50 +50,30 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
 
     const handleUpdateClick = (row: Row) => {
         setUpdatedRow(row);
-        // Eğer tek kitap varsa onu seç
-        if (!row.book.includes(',')) {
-            setSelectedBookForUpdate(row.book);
-        }
         setUpdateDialogOpen(true);
-    };
-
-    // Seçilen kitabın bilgilerini bulmak için yardımcı fonksiyon
-    const getSelectedBookDetails = (selectedBook: string) => {
-        if (!updatedRow) return null;
-
-        const allBooks = updatedRow.book.split(', ');
-        const allDates = updatedRow.date.split(', ');
-        const allReturnDates = updatedRow.returnDate.split(', ');
-
-        const index = allBooks.indexOf(selectedBook);
-        if (index === -1) return null;
-
-        return {
-            date: allDates[index],
-            returnDate: allReturnDates[index]
-        };
     };
 
     const handleConfirmUpdate = () => {
         if (updatedRow && onUpdate) {
-            const updateData = {
-                ...updatedRow,
-                selectedBook: selectedBookForUpdate || updatedRow.book,
-                date: updatedRow.date,
-                returnDate: updatedRow.returnDate
-            };
-
-            onUpdate(updatedRow.id, updateData);
-            setUpdateDialogOpen(false);
-            setUpdatedRow(null);
-            setSelectedBookForUpdate('');
+            onUpdate(updatedRow);
         }
+        setUpdateDialogOpen(false);
+        setUpdatedRow(null);
     };
 
     const handleCancelUpdate = () => {
         setUpdateDialogOpen(false);
         setUpdatedRow(null);
-        setSelectedBookForUpdate('');
+    };
+
+    const handleDetailClick = (row: Row) => {
+        setSelectedRow(row);
+        setDetailDialogOpen(true);
+    };
+
+    const handleCloseDetailDialog = () => {
+        setDetailDialogOpen(false);
+        setSelectedRow(null);
     };
 
     const turkishToEnglish = (text: string) => {
@@ -288,23 +256,25 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
                                                 Güncelle
                                             </Button>
                                         )}
-                                        {showDetailsButton && onDetails && (
+                                        {showDetailsButton && (
                                             <Button
                                                 variant="contained"
-                                                color="info"
+                                                color="primary"
                                                 size="small"
-                                                onClick={() => onDetails(row)}
+                                                onClick={() => handleDetailClick(row)}
                                                 startIcon={<Info />}
                                                 sx={{
                                                     borderRadius: '8px',
                                                     textTransform: 'none',
                                                     boxShadow: 'none',
+                                                    backgroundColor: '#42a5f5',
                                                     '&:hover': {
+                                                        backgroundColor: '#1976d2',
                                                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                                     }
                                                 }}
                                             >
-                                                Detaylar
+                                                Detay
                                             </Button>
                                         )}
                                     </Box>
@@ -371,119 +341,51 @@ const Table1: React.FC<Table1Props> = ({ Column, Row, onDelete, onUpdate, showDe
 
             <Dialog open={updateDialogOpen} onClose={handleCancelUpdate}>
                 <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
-                    Kitap Bilgilerini Güncelle
+                    Güncelle
                 </DialogTitle>
                 <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
-                    {updatedRow && (
-                        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
-                            {!updatedRow.book.includes(',') ? (
-                                // Tek kitap varsa
-                                <>
-                                    <TextField
-                                        label="Kitap"
-                                        value={updatedRow.book}
-                                        disabled
-                                        fullWidth
-                                        margin="normal"
-                                    />
-                                    <DatePicker
-                                        label="Alış Tarihi"
-                                        value={dayjs(updatedRow.date, 'DD.MM.YYYY')}
-                                        onChange={(newValue) => {
-                                            setUpdatedRow({
-                                                ...updatedRow,
-                                                date: newValue ? newValue.format('DD.MM.YYYY') : '',
-                                            });
-                                        }}
-                                        format="DD.MM.YYYY"
-                                        sx={{ width: '100%', mt: 2, mb: 1 }}
-                                    />
-                                    <DatePicker
-                                        label="Teslim Tarihi"
-                                        value={dayjs(updatedRow.returnDate, 'DD.MM.YYYY')}
-                                        onChange={(newValue) => {
-                                            setUpdatedRow({
-                                                ...updatedRow,
-                                                returnDate: newValue ? newValue.format('DD.MM.YYYY') : '',
-                                            });
-                                        }}
-                                        format="DD.MM.YYYY"
-                                        sx={{ width: '100%', mt: 2 }}
-                                    />
-                                </>
-                            ) : (
-                                // Birden fazla kitap varsa
-                                <>
-                                    <FormControl fullWidth margin="normal">
-                                        <InputLabel>Kitap Seçin</InputLabel>
-                                        <Select
-                                            value={selectedBookForUpdate}
-                                            onChange={(e) => {
-                                                const selected = e.target.value;
-                                                setSelectedBookForUpdate(selected);
-                                                const details = getSelectedBookDetails(selected);
-                                                if (details) {
-                                                    setUpdatedRow({
-                                                        ...updatedRow,
-                                                        selectedDate: details.date,
-                                                        selectedReturnDate: details.returnDate
-                                                    });
-                                                }
-                                            }}
-                                            label="Kitap Seçin"
-                                        >
-                                            {updatedRow.book.split(', ').map((book: string) => (
-                                                <MenuItem key={book} value={book}>
-                                                    {book}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                    {selectedBookForUpdate && (
-                                        <>
-                                            <DatePicker
-                                                label="Alış Tarihi"
-                                                value={dayjs(updatedRow.selectedDate || updatedRow.date, 'DD.MM.YYYY')}
-                                                onChange={(newValue) => {
-                                                    setUpdatedRow({
-                                                        ...updatedRow,
-                                                        selectedDate: newValue ? newValue.format('DD.MM.YYYY') : '',
-                                                    });
-                                                }}
-                                                format="DD.MM.YYYY"
-                                                sx={{ width: '100%', mt: 2, mb: 1 }}
-                                            />
-                                            <DatePicker
-                                                label="Teslim Tarihi"
-                                                value={dayjs(updatedRow.selectedReturnDate || updatedRow.returnDate, 'DD.MM.YYYY')}
-                                                onChange={(newValue) => {
-                                                    setUpdatedRow({
-                                                        ...updatedRow,
-                                                        selectedReturnDate: newValue ? newValue.format('DD.MM.YYYY') : '',
-                                                    });
-                                                }}
-                                                format="DD.MM.YYYY"
-                                                sx={{ width: '100%', mt: 2 }}
-                                            />
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </LocalizationProvider>
-                    )}
+                    {updatedRow && Column.map((col) => (
+                        <TextField
+                            key={col.field}
+                            label={col.headerName}
+                            value={updatedRow[col.field] || ''}
+                            onChange={(e) => {
+                                if (col.field === 'id') return;
+                                setUpdatedRow({
+                                    ...updatedRow,
+                                    [col.field]: e.target.value,
+                                });
+                            }}
+                            fullWidth
+                            margin="normal"
+                            disabled={col.field === 'id'}
+                        />
+                    ))}
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'center', padding: 2, gap: 2 }}>
                     <Button variant="outlined" onClick={handleCancelUpdate} sx={{ width: '120px' }}>
                         Vazgeç
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="warning"
-                        onClick={handleConfirmUpdate}
-                        sx={{ width: '120px' }}
-                        disabled={updatedRow?.book.includes(',') && !selectedBookForUpdate}
-                    >
+                    <Button variant="contained" color="warning" onClick={handleConfirmUpdate} sx={{ width: '120px' }}>
                         Güncelle
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={detailDialogOpen} onClose={handleCloseDetailDialog}>
+                <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+                    Detaylar
+                </DialogTitle>
+                <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
+                    {selectedRow && Column.map((col) => (
+                        <Box key={col.field} sx={{ marginBottom: 2 }}>
+                            <strong>{col.headerName}:</strong> {selectedRow[col.field]}
+                        </Box>
+                    ))}
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', padding: 2 }}>
+                    <Button variant="contained" onClick={handleCloseDetailDialog}>
+                        Kapat
                     </Button>
                 </DialogActions>
             </Dialog>

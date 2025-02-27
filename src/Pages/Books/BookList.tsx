@@ -1,10 +1,12 @@
 import React from "react";
 import { BookProps } from "../../types/BookProps.ts";
 import Table1 from "../../Components/Table1.tsx";
+import { Row } from "../../types/TableProps.ts";
 
 interface BookListProps {
     books: BookProps[];
     onDeleteBook: (id: number) => void;
+    onUpdateBook: (updatedBook: BookProps) => void;
 }
 
 const columns = [
@@ -13,10 +15,27 @@ const columns = [
     { field: "author", headerName: "Yazar", width: 180 },
 ];
 
-const BookList: React.FC<BookListProps> = ({ books, onDeleteBook }) => {
+const BookList: React.FC<BookListProps> = ({ books, onDeleteBook, onUpdateBook }) => {
+    const handleUpdate = (updatedRow: Row) => {
+        const updatedBook: BookProps = {
+            id: updatedRow.id,
+            title: updatedRow.title,
+            author: updatedRow.author,
+            pageCount: updatedRow.pageCount
+        };
+        onUpdateBook(updatedBook);
+    };
+
     return (
-        <div>
-            <Table1 Column={columns} Row={books} onDelete={onDeleteBook} showDeleteButton={true} showUpdateButton={true} />
+        <div style={{ marginTop: "20px" }}>
+            <Table1
+                Column={columns}
+                Row={books}
+                onDelete={onDeleteBook}
+                onUpdate={handleUpdate}
+                showDeleteButton={true}
+                showUpdateButton={true}
+            />
         </div>
     );
 };

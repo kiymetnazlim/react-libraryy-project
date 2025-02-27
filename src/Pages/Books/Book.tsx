@@ -17,9 +17,14 @@ const BookForm: React.FC = () => {
         }
     }, []);
 
-    const handleAddBook = (book: { title: string; author: string }) => {
+    const handleAddBook = (book: { title: string; author: string; pageCount: number }) => {
         const lastId = books.length > 0 ? books[books.length - 1].id : 0;
-        const newBook = { id: lastId + 1, ...book };
+        const newBook: BookProps = {
+            id: lastId + 1,
+            title: book.title,
+            author: book.author,
+            pageCount: book.pageCount
+        };
         const updatedBooks = [...books, newBook];
 
         localStorage.setItem("books", JSON.stringify(updatedBooks));
@@ -32,10 +37,24 @@ const BookForm: React.FC = () => {
         setBooks(updatedBooks);
     }
 
+    const handleUpdateBook = (updatedBook: BookProps) => {
+        const updatedBooks = books.map(book =>
+            book.id === updatedBook.id ? updatedBook : book
+        );
+
+        localStorage.setItem("books", JSON.stringify(updatedBooks));
+        setBooks(updatedBooks);
+        alert("Kitap bilgileri başarıyla güncellendi!");
+    };
+
     return (
         <div className="book-form-container">
             <AddBook onAddBook={handleAddBook} />
-            <BookList books={books} onDeleteBook={handleDeleteBook} />
+            <BookList
+                books={books}
+                onDeleteBook={handleDeleteBook}
+                onUpdateBook={handleUpdateBook}
+            />
         </div>
     );
 };

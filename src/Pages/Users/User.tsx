@@ -29,10 +29,23 @@ const UserForm: React.FC = () => {
         setUsers(updatedUsers);
     };
 
+    const handleUpdateUser = (updatedUser: UserProps) => {
+        const updatedUsers = users.map(user =>
+            user.id === updatedUser.id ? updatedUser : user
+        );
+
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
+    };
+
     return (
         <div className="user-form-container">
             <AddUser onAddUser={handleAddUser} />
-            <UserList users={users} onDeleteUser={handleDeleteUser} /> {/* Silme fonksiyonunu gönder */}
+            <UserList
+                users={users}
+                onDeleteUser={handleDeleteUser}
+                onUpdateUser={handleUpdateUser}
+            />
         </div>
     );
 };

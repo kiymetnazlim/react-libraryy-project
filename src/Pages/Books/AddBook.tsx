@@ -2,20 +2,32 @@ import React, { useState } from "react";
 import { Button } from "@mui/material";
 import CustomModal from "../../Components/Modal.tsx";
 
-const AddBook: React.FC<{ onAddBook: (book: { title: string; author: string }) => void }> = ({ onAddBook }) => {
-    const [book, setBook] = useState<{ title: string; author: string }>({ title: "", author: "" });
+interface AddBookProps {
+    onAddBook: (book: { title: string; author: string; pageCount: number }) => void;
+}
+
+const AddBook: React.FC<AddBookProps> = ({ onAddBook }) => {
+    const [title, setTitle] = useState("");
+    const [author, setAuthor] = useState("");
+    const [pageCount, setPageCount] = useState<number>(0);
     const [open, setOpen] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setBook({ ...book, [e.target.name]: e.target.value });
+        if (e.target.name === "title") {
+            setTitle(e.target.value);
+        } else if (e.target.name === "author") {
+            setAuthor(e.target.value);
+        } else if (e.target.name === "pageCount") {
+            setPageCount(Number(e.target.value));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        onAddBook(book);
-
-        setBook({ title: "", author: "" });
+        onAddBook({ title, author, pageCount });
+        setTitle("");
+        setAuthor("");
+        setPageCount(0);
         setOpen(false);
     };
 
@@ -58,7 +70,7 @@ const AddBook: React.FC<{ onAddBook: (book: { title: string; author: string }) =
                         <input
                             type="text"
                             name="title"
-                            value={book.title}
+                            value={title}
                             onChange={handleChange}
                             placeholder="Kitap Adı"
                             required
@@ -74,9 +86,24 @@ const AddBook: React.FC<{ onAddBook: (book: { title: string; author: string }) =
                         <input
                             type="text"
                             name="author"
-                            value={book.author}
+                            value={author}
                             onChange={handleChange}
                             placeholder="Yazar"
+                            required
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '4px',
+                                fontSize: '16px'
+                            }}
+                        />
+                        <input
+                            type="number"
+                            name="pageCount"
+                            value={pageCount}
+                            onChange={handleChange}
+                            placeholder="Sayfa Sayısı"
                             required
                             style={{
                                 width: '100%',

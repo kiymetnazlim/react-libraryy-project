@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import CustomDropdown from "../../Components/CustomDropdown";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Divider, Box } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { Button } from '@mui/material';
 import Table1 from "../../Components/Table1.tsx";
+import { Row } from "../../types/TableProps.ts";
 
 interface Lending {
     id: number;
@@ -49,8 +49,6 @@ const LendBooks: React.FC = () => {
     const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
     const [lendings, setLendings] = useState<Lending[]>(storedLendings);
     const [dropdownKey, setDropdownKey] = useState<number>(0);
-    const [detailsOpen, setDetailsOpen] = useState(false);
-    const [selectedLendings, setSelectedLendings] = useState<Lending[]>([]);
 
     const handleUserSelect = (user: string): void => {
         setSelectedUser(user);
@@ -64,24 +62,16 @@ const LendBooks: React.FC = () => {
     };
 
     const combineLendings = (lendings: Lending[]): CombinedLending[] => {
-        const userMap = new Map<string, CombinedLending>();
+        const userDateMap = new Map<string, CombinedLending>();
 
         lendings.forEach((lending) => {
-            const key = lending.user;
+            const key = `${lending.user}-${lending.date}`;
 
-            if (userMap.has(key)) {
-                const existingLending = userMap.get(key)!;
-                if (!existingLending.book.includes(lending.book)) {
-                    existingLending.book.push(lending.book);
-                }
-                const currentDate = new Date(lending.date);
-                const existingDate = new Date(existingLending.date);
-                if (currentDate > existingDate) {
-                    existingLending.date = lending.date;
-                    existingLending.returnDate = lending.returnDate;
-                }
+            if (userDateMap.has(key)) {
+                const existingLending = userDateMap.get(key)!;
+                existingLending.book.push(lending.book);
             } else {
-                userMap.set(key, {
+                userDateMap.set(key, {
                     id: lending.id,
                     user: lending.user,
                     book: [lending.book],
@@ -91,7 +81,7 @@ const LendBooks: React.FC = () => {
             }
         });
 
-        return Array.from(userMap.values());
+        return Array.from(userDateMap.values());
     };
 
     const handleDeleteLending = (id: number): void => {
@@ -144,23 +134,24 @@ const LendBooks: React.FC = () => {
         book: lending.book.join(', ')
     }));
 
-    const handleUpdateLending = (id: number): void => {
-        const lendingToUpdate = lendings.find(lending => lending.id === id);
+    const handleUpdateLending = (updatedRow: Row): void => {
+        const lendingToUpdate = lendings.find(lending => lending.id === updatedRow.id);
         if (lendingToUpdate) {
-            // Update the lending logic here, for example:
-            alert(`Updating lending for user: ${lendingToUpdate.user}, books: ${lendingToUpdate.book}`);
+            const updatedLendings = lendings.map(lending => {
+                if (lending.id === updatedRow.id) {
+                    return {
+                        ...lending,
+                        date: updatedRow.date,
+                        returnDate: updatedRow.returnDate
+                    };
+                }
+                return lending;
+            });
+
+            localStorage.setItem('lendings', JSON.stringify(updatedLendings));
+            setLendings(updatedLendings);
+            alert("Ödünç bilgileri başarıyla güncellendi!");
         }
-    };
-
-    const handleDetails = (row: any) => {
-        const userLendings = lendings.filter(lending => lending.user === row.user);
-        setSelectedLendings(userLendings);
-        setDetailsOpen(true);
-    };
-
-    const handleCloseDetails = () => {
-        setDetailsOpen(false);
-        setSelectedLendings([]);
     };
 
     return (
@@ -236,78 +227,8 @@ const LendBooks: React.FC = () => {
                     onUpdate={handleUpdateLending}
                     showDeleteButton={true}
                     showUpdateButton={true}
-                    showDetailsButton={true}
-                    onDetails={handleDetails}
                 />
             </div>
-
-            {/* Detaylar Modal */}
-            <Dialog
-                open={detailsOpen}
-                onClose={handleCloseDetails}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle sx={{
-                    backgroundColor: '#f5f5f5',
-                    borderBottom: '1px solid #e0e0e0'
-                }}>
-                    <Typography variant="h6" component="div">
-                        Ödünç Detayları
-                    </Typography>
-                </DialogTitle>
-                <DialogContent sx={{ mt: 2 }}>
-                    {selectedLendings.length > 0 && (
-                        <>
-                            <Typography variant="subtitle1" gutterBottom>
-                                <strong>Kullanıcı:</strong> {selectedLendings[0].user}
-                            </Typography>
-                            <Divider sx={{ my: 2 }} />
-                            <Typography variant="subtitle1" gutterBottom>
-                                <strong>Ödünç Alınan Kitaplar:</strong>
-                            </Typography>
-                            {selectedLendings.map((lending, index) => (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        backgroundColor: '#f8f9fa',
-                                        borderRadius: '4px',
-                                        p: 2,
-                                        mb: 1,
-                                        border: '1px solid #e0e0e0'
-                                    }}
-                                >
-                                    <Typography variant="body1" gutterBottom>
-                                        <strong>Kitap:</strong> {lending.book}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        <strong>Alış Tarihi:</strong> {lending.date}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        <strong>Teslim Tarihi:</strong> {lending.returnDate}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{
-                    borderTop: '1px solid #e0e0e0',
-                    padding: 2
-                }}>
-                    <Button
-                        onClick={handleCloseDetails}
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                            borderRadius: '8px',
-                            textTransform: 'none'
-                        }}
-                    >
-                        Kapat
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </div>
     );
 };

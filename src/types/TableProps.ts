@@ -1,4 +1,3 @@
-
 export interface Column {
     field: string;
     headerName: string;
@@ -18,9 +17,10 @@ export interface TableProps {
     Column: Column[];
     Row: Row[];
     onDelete: (id: number) => void;
-    onUpdate?: (id: number, updatedData: Record<string, any>) => void;
+    onUpdate?: (updatedRow: Row) => void;
     showDeleteButton?: boolean;
     showUpdateButton?: boolean;
+    showDetailsButton?: boolean;
     dialogContent?: (row: Row) => React.ReactNode;
 
 
