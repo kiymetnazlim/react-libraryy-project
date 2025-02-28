@@ -16,15 +16,17 @@ export interface Row {
 export interface TableProps {
     Column: Column[];
     Row: Row[];
-    onDelete: (id: number) => void;
-    onUpdate?: (updatedRow: Row) => void;
+    onDelete?: (id: number) => void;
+    onUpdate?: (row: Row) => void;
+    onDetail?: (row: Row) => void;
+    onReturn?: (row: Row) => void;
     showDeleteButton?: boolean;
     showUpdateButton?: boolean;
     showDetailsButton?: boolean;
-    dialogContent?: (row: Row) => React.ReactNode;
-
-
-
-
-
+    showReturnButton?: boolean;
+    isUserUpdate?: boolean;
+    isBookUpdate?: boolean;
+    availableBooks?: string[];
 }
+
+export interface Table1Props extends TableProps { }

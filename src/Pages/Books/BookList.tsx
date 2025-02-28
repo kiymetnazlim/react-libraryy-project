@@ -1,6 +1,6 @@
 import React from "react";
 import { BookProps } from "../../types/BookProps.ts";
-import Table1 from "../../Components/Table1.tsx";
+import Table1 from "../../Components/Table.tsx/Table1.tsx";
 import { Row } from "../../types/TableProps.ts";
 
 interface BookListProps {

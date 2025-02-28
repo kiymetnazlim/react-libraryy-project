@@ -1,6 +1,7 @@
 import React from "react";
 import { UserProps } from "../../types/UserProps";
-import Table1 from "../../Components/Table1";
+import Table1 from "../../Components/Table.tsx/Table1";
+import { Row } from "../../types/TableProps";
 
 interface UserListProps {
     users: UserProps[];
@@ -15,13 +16,17 @@ const columns = [
 ];
 
 const UserList: React.FC<UserListProps> = ({ users, onDeleteUser, onUpdateUser }) => {
+    const handleUpdate = (row: Row) => {
+        onUpdateUser(row as UserProps);
+    };
+
     return (
         <div style={{ marginTop: "20px" }}>
             <Table1
                 Column={columns}
                 Row={users}
                 onDelete={onDeleteUser}
-                onUpdate={onUpdateUser}
+                onUpdate={handleUpdate}
                 showDeleteButton={true}
                 showUpdateButton={true}
             />
