@@ -14,10 +14,15 @@ const LendBooks: React.FC = () => {
     const storedBooks: { title: string }[] = JSON.parse(localStorage.getItem('books') || '[]');
     const storedLendings: Lending[] = JSON.parse(localStorage.getItem('lendings') || '[]');
 
-    const lentBooks = storedLendings.map(lending => lending.book);
+    // Aktif olarak ödünç alınmış kitapları bul
+    const activelyLentBooks = storedLendings
+        .filter(lending => lending.status === 'active')
+        .map(lending => lending.book);
+
+    // Müsait kitaplar: Tüm kitaplardan aktif ödünç alınmış kitapları çıkar
     const availableBooks = storedBooks
         .map(book => book.title)
-        .filter(book => !lentBooks.includes(book));
+        .filter(book => !activelyLentBooks.includes(book));
 
     const [bookNames, setBookNames] = useState<string[]>(availableBooks);
     const [lendings, setLendings] = useState<Lending[]>(storedLendings);
@@ -81,15 +86,35 @@ const LendBooks: React.FC = () => {
     };
 
     const handleUpdateLending = (updatedRow: Row): void => {
-        const combinedLending = combineLendings(lendings).find(lending => lending.id === updatedRow.id);
-        if (!combinedLending) return;
+        // Güncellemeden önceki eski kitap adını bul
+        const oldLending = lendings.find(lending =>
+            lending.id === updatedRow.id ||
+            (lending.book === updatedRow.book &&
+                lending.date === updatedRow.date &&
+                lending.returnDate === updatedRow.returnDate)
+        );
+
+        // Eğer kitap değiştiriliyorsa ve yeni seçilen kitap zaten aktif olarak ödünç alınmışsa engelle
+        const isBookAlreadyLent = lendings.some(lending =>
+            lending.book === updatedRow.book &&
+            lending.status === 'active' &&
+            lending.id !== updatedRow.id
+        );
+
+        if (isBookAlreadyLent) {
+            alert("Bu kitap zaten başka bir kullanıcıya ödünç verilmiş!");
+            return;
+        }
 
         const updatedLendings = lendings.map(lending => {
-            if (lending.user === combinedLending.user && lending.book === updatedRow.book) {
+            if (lending.id === updatedRow.id ||
+                (lending.book === oldLending?.book &&
+                    lending.date === updatedRow.date &&
+                    lending.returnDate === updatedRow.returnDate)) {
                 return {
                     ...lending,
-                    date: updatedRow.date,
-                    returnDate: updatedRow.returnDate
+                    ...updatedRow,
+                    status: 'active' as const // Güncellenen kitabın durumunu aktif yap
                 };
             }
             return lending;
@@ -97,6 +122,18 @@ const LendBooks: React.FC = () => {
 
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
+
+        // Eski kitabı müsait kitaplar listesine ekle, yeni kitabı listeden çıkar
+        if (oldLending && oldLending.book !== updatedRow.book) {
+            setBookNames(prev => {
+                const newBooks = [...prev];
+                if (!newBooks.includes(oldLending.book)) {
+                    newBooks.push(oldLending.book); // Eski kitabı listeye ekle
+                }
+                return newBooks.filter(book => book !== updatedRow.book); // Yeni kitabı listeden çıkar
+            });
+        }
+
         alert("Ödünç bilgileri başarıyla güncellendi!");
     };
 
@@ -140,7 +177,10 @@ const LendBooks: React.FC = () => {
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
 
-        setBookNames(prev => [...prev, row.book]);
+        // İade edilen kitabı müsait kitaplar listesine ekle
+        if (!bookNames.includes(row.book)) {
+            setBookNames(prev => [...prev, row.book]);
+        }
 
         setDetailData(prev => prev.map(item => {
             if (item.id === row.id) {
@@ -160,7 +200,9 @@ const LendBooks: React.FC = () => {
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
 
-        const remainingBooks = bookNames.filter((book) => !newLendings.some(lending => lending.book === book));
+        // Sadece aktif olarak ödünç alınan kitapları listeden çıkar
+        const newlyLentBooks = newLendings.map(lending => lending.book);
+        const remainingBooks = bookNames.filter((book) => !newlyLentBooks.includes(book));
         setBookNames(remainingBooks);
     };
 
@@ -191,6 +233,12 @@ const LendBooks: React.FC = () => {
                 combinedLendingsForTable={combinedLendingsForTable}
                 handleUpdateLending={handleUpdateLending}
                 handleReturnBook={handleReturnBook}
+                availableBooks={[
+                    ...availableBooks, // Sadece müsait kitaplar
+                    ...detailData.map(item => item.book).filter(book =>
+                        !availableBooks.includes(book)
+                    ) // Mevcut seçili kitaplar (eğer müsait kitaplarda yoksa)
+                ]}
             />
         </div>
     );

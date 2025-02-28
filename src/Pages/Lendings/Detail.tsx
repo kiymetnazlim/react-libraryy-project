@@ -11,6 +11,7 @@ interface DetailProps {
     combinedLendingsForTable: any[];
     handleUpdateLending: (updatedRow: Row) => void;
     handleReturnBook: (row: Row) => void;
+    availableBooks: string[];
 }
 
 const Detail: React.FC<DetailProps> = ({
@@ -19,7 +20,8 @@ const Detail: React.FC<DetailProps> = ({
     detailData,
     combinedLendingsForTable,
     handleUpdateLending: updateLendingFromProps,
-    handleReturnBook
+    handleReturnBook,
+    availableBooks
 }) => {
     // Ekrandaki verinin anlık olarak değişmesini sağlamak için state kullanıyoruz
     const [localDetailData, setLocalDetailData] = useState<any[]>(detailData);
@@ -127,13 +129,14 @@ const Detail: React.FC<DetailProps> = ({
             <DialogContent sx={{ paddingX: 4, paddingY: 2 }}>
                 <Table1
                     Column={detailColumns}
-                    Row={localDetailData}  // Güncellenmiş veriyi buraya bağlıyoruz
+                    Row={localDetailData}
                     showDeleteButton={false}
                     showUpdateButton={true}
                     showDetailsButton={false}
                     showReturnButton={true}
                     onUpdate={handleUpdateLending}
                     onReturn={handleReturnBook}
+                    availableBooks={availableBooks}
                 />
             </DialogContent>
             <DialogActions sx={{

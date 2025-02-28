@@ -112,6 +112,36 @@ const UpdateDialog: React.FC<UpdateDialogProps> = ({
                                         </Box>
                                     );
                                 }
+
+                                if (col.field === 'book') {
+                                    const uniqueBooks = [...new Set([
+                                        updatedRow?.book,
+                                        ...(availableBooks || [])
+                                    ])].filter(Boolean);
+
+                                    return (
+                                        <FormControl key={col.field} fullWidth margin="normal">
+                                            <InputLabel>{col.headerName}</InputLabel>
+                                            <Select
+                                                value={updatedRow?.[col.field] || ''}
+                                                label={col.headerName}
+                                                onChange={(e) => {
+                                                    setUpdatedRow({
+                                                        ...updatedRow!,
+                                                        [col.field]: e.target.value,
+                                                    });
+                                                }}
+                                            >
+                                                {uniqueBooks.map((book: string) => (
+                                                    <MenuItem key={book} value={book}>
+                                                        {book}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    );
+                                }
+
                                 return (
                                     <TextField
                                         key={col.field}
