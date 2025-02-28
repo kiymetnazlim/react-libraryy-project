@@ -78,11 +78,21 @@ const LendBooks: React.FC = () => {
         const combinedLending = combineLendings(lendings).find(lending => lending.id === id);
         if (!combinedLending) return;
 
+        // Kullanıcının tüm ödünç kayıtlarını bul
+        const userLendings = lendings.filter(lending => lending.user === combinedLending.user);
+
+        // Kullanıcının aktif (iade edilmemiş) kitapları var mı kontrol et
+        const hasActiveBooks = userLendings.some(lending => lending.status === 'active');
+
+        if (hasActiveBooks) {
+            alert("Bu kaydı silemezsiniz! Kullanıcının iade edilmemiş kitapları bulunmaktadır.");
+            return;
+        }
+
+        // Tüm kitaplar iade edilmişse silme işlemini gerçekleştir
         const updatedLendings = lendings.filter(lending => lending.user !== combinedLending.user);
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
-
-        setBookNames(prev => [...prev, ...combinedLending.book]);
     };
 
     const handleUpdateLending = (updatedRow: Row): void => {
