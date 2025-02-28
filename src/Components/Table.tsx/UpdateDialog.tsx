@@ -1,7 +1,10 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import 'dayjs/locale/tr';
 import { Column, Row } from '../../types/TableProps';
 
 interface UpdateDialogProps {
@@ -84,20 +87,21 @@ const UpdateDialog: React.FC<UpdateDialogProps> = ({
                             </Select>
                         </FormControl>
                     ) : (
-                        <>
+                        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
                             {Column.map((col) => {
                                 if (col.field === 'date' || col.field === 'returnDate') {
                                     return (
                                         <Box key={col.field} sx={{ marginTop: 2 }}>
                                             <DatePicker
                                                 label={col.headerName}
-                                                value={editingDates?.[col.field as 'date' | 'returnDate'] ? dayjs(editingDates[col.field as 'date' | 'returnDate']) : null}
+                                                value={editingDates?.[col.field as 'date' | 'returnDate'] ? dayjs(editingDates[col.field as 'date' | 'returnDate'], 'DD.MM.YYYY') : null}
                                                 onChange={(newValue) => {
                                                     setEditingDates((prev: { date: string | null; returnDate: string | null } | null) => ({
                                                         ...prev!,
                                                         [col.field]: newValue ? newValue.format('DD.MM.YYYY') : null
                                                     }));
                                                 }}
+                                                format="DD.MM.YYYY"
                                                 slotProps={{
                                                     textField: {
                                                         fullWidth: true,
@@ -126,7 +130,7 @@ const UpdateDialog: React.FC<UpdateDialogProps> = ({
                                     />
                                 );
                             })}
-                        </>
+                        </LocalizationProvider>
                     )
                 )}
             </DialogContent>

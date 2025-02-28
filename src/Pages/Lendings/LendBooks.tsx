@@ -85,10 +85,11 @@ const LendBooks: React.FC = () => {
         if (!combinedLending) return;
 
         const updatedLendings = lendings.map(lending => {
-            if (lending.user === combinedLending.user) {
+            if (lending.user === combinedLending.user && lending.book === updatedRow.book) {
                 return {
                     ...lending,
-                    user: updatedRow.user
+                    date: updatedRow.date,
+                    returnDate: updatedRow.returnDate
                 };
             }
             return lending;
@@ -96,7 +97,7 @@ const LendBooks: React.FC = () => {
 
         localStorage.setItem('lendings', JSON.stringify(updatedLendings));
         setLendings(updatedLendings);
-        alert("Kullanıcı başarıyla güncellendi!");
+        alert("Ödünç bilgileri başarıyla güncellendi!");
     };
 
     const handleDetailClick = (row: Row) => {
